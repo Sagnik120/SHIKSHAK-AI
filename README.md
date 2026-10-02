@@ -24,7 +24,7 @@
 
 **🏆 Build Fast with AI Hackathon** · Problem statement: *Personalised AI Tutor for Learning AI*
 
-[🌐 Live demo](https://shikshak-ai.onrender.com/) · [▶️ Demo video](https://drive.google.com/drive/folders/1ibsr1tZanhtruCBbIwiGkAy0mXx35XLY?usp=drive_link) · [⚡ Quick start](#-quick-start-tldr) · [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough)
+[🌐 Live demo](https://shikshak-ai-ten.vercel.app/) · [▶️ Demo video](https://drive.google.com/drive/folders/1infdc3RWzBQl95rh4vZ49I8wZBQgEkA3?usp=sharing) · [⚡ Quick start](#-quick-start-tldr) · [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough)
 
 </div>
 
@@ -267,9 +267,7 @@ SHIKSHAK-AI/
 │   └── frontend/                   Legacy static frontend (served by the backend)
 ├── 🛠️ scripts/                     Server runner, preflight check, model download, demo helpers
 ├── 🧪 tests/                       Unit, integration, e2e, smoke and eval suites
-├── 📚 docs/                        Architecture, deployment, curriculum, specs, images
-├── 📦 demo_data/                   Sample documents for testing grounded lessons
-├── 💾 data/ · chroma_db/ · models/ Runtime data, vector store, downloaded models
+├── 📚 docs/                        Architecture diagrams and visual assets
 ├── 🐳 Dockerfile · docker-compose.yml
 ├── 📋 requirements.txt · requirements-lite.txt
 └── 🔧 .env.example
@@ -555,7 +553,7 @@ These are created automatically on first start:
 > ```
 > Refresh the home page and a **🔄 Time to refresh** card appears.
 
-📦 Want to test grounded lessons? Upload a file from [`demo_data/demo_documnet/`](demo_data/demo_documnet/). Its README lists the made-up details that prove the lesson came from your document.
+📦 Want to test grounded lessons? Upload any PDF, DOCX, or text file via the **Upload Document** tab to generate a custom syllabus and grounded lesson.
 
 ---
 
@@ -599,7 +597,7 @@ pnpm lint                     # lint
 
 <div align="center">
 
-**[▶️ Watch the demo video & materials](https://drive.google.com/drive/folders/1ibsr1tZanhtruCBbIwiGkAy0mXx35XLY?usp=drive_link)** · **[🌐 Open the live demo](https://shikshak-ai.onrender.com/)**
+**[▶️ Watch the demo video & materials](https://drive.google.com/drive/folders/1infdc3RWzBQl95rh4vZ49I8wZBQgEkA3?usp=sharing)** · **[🌐 Open the live demo](https://shikshak-ai-ten.vercel.app/)**
 
 </div>
 
@@ -609,11 +607,9 @@ pnpm lint                     # lint
 
 | | Document |
 | :---: | :--- |
-| 🚢 | [Deployment guide](docs/DEPLOYMENT.md) |
-| 🎓 | [CBSE AI curriculum alignment](docs/CBSE_AI_CURRICULUM_GUIDE.md) |
+| 🏗️ | [System Architecture Diagram](docs/images/shikshak_system_architecture.png) |
 | 🖥️ | [Frontend README](FRONTEND/README.md) |
-| 🛠️ | [Scripts reference](scripts/README.md) |
-| 📐 | [Specifications](docs/spec/) · [System docs](docs/system/) |
+| 🛠️ | [Scripts Reference](scripts/README.md) |
 
 ---
 

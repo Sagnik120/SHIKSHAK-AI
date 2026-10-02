@@ -43,9 +43,15 @@ def sanitize_latex(raw) -> str:
     text = re.sub(r"^\$\$(.*?)\$\$$", r"\1", text, flags=re.DOTALL).strip()
     text = re.sub(r"^\$(.*?)\$$", r"\1", text, flags=re.DOTALL).strip()
     text = re.sub(r"^\\\((.*?)\\\)$", r"\1", text, flags=re.DOTALL).strip()
-    text = re.sub(r"^\\\[(.*?)\\\]$", r"\1", text, flags=re.DOTALL).strip()
+    # Block dangerous macros that should never be executed
+    dangerous = [r"\input", r"\include", r"\write18", r"\catcode", r"\def", r"\let", r"\openout"]
+    for d in dangerous:
+        text = text.replace(d, "")
 
     return text.strip()
+
+
+sanitize_latex_string = sanitize_latex
 
 
 def to_plain_text(raw) -> str:

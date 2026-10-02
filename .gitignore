@@ -41,13 +41,13 @@ chroma_db/
 *.db-shm
 data/shikshak.db*
 
-# User data: uploads, rendered media, dev email outbox
-data/storage/*
-!data/storage/.gitkeep
-data/media/*
-!data/media/.gitkeep
-data/outbox/
-data/avatar_voice_test_media/
+# User data: uploads, rendered media, dev email outbox, runtime data
+data/
+demo_data/
+instructions/
+current_task/
+deployment_plan.md
+*.pptx
 
 # Generated media
 output/

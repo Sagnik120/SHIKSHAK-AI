@@ -306,3 +306,6 @@ class IllustratedAvatarAdapter:
             d.chord([mx - wid + 8, my - hgt // 2 + 4, mx + wid - 8, my + hgt // 2 + 2], 180, 360, fill=TEETH)
         if shape in ("wide", "mid"):
             d.chord([mx - wid // 2, my + hgt // 3, mx + wid // 2, my + hgt - 4], 0, 180, fill=TONGUE)
+
+
+IllustratedAvatarGenerator = IllustratedAvatarAdapter
