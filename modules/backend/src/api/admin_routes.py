@@ -23,6 +23,11 @@ from modules.backend.src.services import escalation_service, lesson_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 STARTED_AT = time.time()
+STAFF_ROLES = ("admin", "teacher")
+# A learner who skipped (or moved on after "continue") without mastering the
+# concept still needs a person; only mastery later resolves it.
+NEEDS_MENTOR = ("open", "skipped", "closed")
+MOVED_ON = ("skipped", "closed")
 
 
 def require_admin(user: User = Depends(get_current_user)) -> User:
@@ -81,7 +86,8 @@ def overview(
             select(LessonEvent.lesson_id).where(LessonEvent.occurred_at >= since_day)
         ).all()
     }
-    active_users = {lesson.user_id for lesson in lessons if lesson.id in active_today}
+    students = set(db.scalars(select(User.id).where(User.role == "student")).all())
+    active_users = {lesson.user_id for lesson in lessons if lesson.id in active_today} & students
 
     # Per concept (lesson, node): first answer right = understood first time;
     # a wrong answer followed later by a right one = rescued by re-explanation.
@@ -126,7 +132,7 @@ def overview(
         "lessons": len(lessons),
         "completed": sum(1 for l in lessons if l.status == "completed"),
         "live_now": len(_active_sessions()),
-        "open_escalations": sum(1 for e in escalations if e.status == "open"),
+        "open_escalations": sum(1 for e in escalations if e.status in NEEDS_MENTOR),
         "escalations_total": len(escalations),
         "questions_answered": len(graded),
         "accuracy_pct": _pct(sum(1 for q in graded if q.correct), len(graded)),
@@ -171,7 +177,9 @@ def escalations(
     db: Session = Depends(get_db, scope="function"),
 ):
     query = select(Escalation).order_by(Escalation.opened_at.desc())
-    if status and status != "all":
+    if status == "open":
+        query = query.where(Escalation.status.in_(NEEDS_MENTOR))
+    elif status and status != "all":
         query = query.where(Escalation.status == status)
     items = []
     for esc in db.scalars(query.limit(200)).all():
@@ -184,7 +192,8 @@ def escalations(
                 Interaction.correct.is_(False),
             )
         ) or 0
-        end = _aware(esc.closed_at) or _now()
+        waiting = esc.status in NEEDS_MENTOR
+        end = _now() if waiting else (_aware(esc.closed_at) or _now())
         items.append({
             **escalation_service.as_dict(esc),
             "learner": user.full_name if user else "",
@@ -194,10 +203,16 @@ def escalations(
             "last_answer": last.raw_answer if last else None,
             "wrong_answers": wrong,
             "minutes_open": int((end - _aware(esc.opened_at)).total_seconds() // 60),
+            "needs_mentor": waiting,
+            "learner_moved_on": esc.status in MOVED_ON,
         })
-    counts = dict(
-        db.execute(select(Escalation.status, func.count()).group_by(Escalation.status)).all()
-    )
+    raw = dict(db.execute(select(Escalation.status, func.count()).group_by(Escalation.status)).all())
+    counts = {
+        "open": sum(raw.get(s, 0) for s in NEEDS_MENTOR),
+        "continued": raw.get("continued", 0),
+        "resolved": raw.get("resolved", 0),
+        "all": sum(raw.values()),
+    }
     return {"escalations": items, "counts": counts}
 
 
@@ -327,7 +342,7 @@ def _learner_row(db: Session, user: User) -> dict:
         "last_active": last.isoformat() if last else None,
         "open_escalations": db.scalar(
             select(func.count()).select_from(Escalation).where(
-                Escalation.user_id == user.id, Escalation.status == "open"
+                Escalation.user_id == user.id, Escalation.status.in_(NEEDS_MENTOR)
             )
         ) or 0,
     }
@@ -349,7 +364,7 @@ def learners(
     _: User = Depends(require_admin),
     db: Session = Depends(get_db, scope="function"),
 ):
-    query = select(User).order_by(User.created_at.desc())
+    query = select(User).where(User.role == "student").order_by(User.created_at.desc())
     if q.strip():
         like = f"%{q.strip()}%"
         query = query.where((User.full_name.ilike(like)) | (User.email.ilike(like)))
@@ -359,7 +374,7 @@ def learners(
 @router.get("/learners/{user_id}")
 def learner(user_id: str, _: User = Depends(require_admin), db: Session = Depends(get_db, scope="function")):
     user = db.get(User, user_id)
-    if user is None:
+    if user is None or user.role != "student":
         raise HTTPException(status_code=404, detail="Learner not found.")
     lessons = db.scalars(select(Lesson).where(Lesson.user_id == user.id).order_by(Lesson.updated_at.desc())).all()
     profile = lesson_service.refresh_learner_profile(db, user.id)
@@ -378,3 +393,20 @@ def learner(user_id: str, _: User = Depends(require_admin), db: Session = Depend
         ) or 0,
     }
 
+
+
+@router.get("/staff")
+def staff(
+    q: str = Query(default="", max_length=120),
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db, scope="function"),
+):
+    """Admins and teachers: who runs the portal. No learning stats — they don't learn here."""
+    query = select(User).where(User.role.in_(STAFF_ROLES)).order_by(User.role, User.created_at.asc())
+    if q.strip():
+        like = f"%{q.strip()}%"
+        query = query.where((User.full_name.ilike(like)) | (User.email.ilike(like)))
+    return {"staff": [
+        {**_identity(u), "role": u.role, "created_at": u.created_at.isoformat()}
+        for u in db.scalars(query.limit(100)).all()
+    ]}

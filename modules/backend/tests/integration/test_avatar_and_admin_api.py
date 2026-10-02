@@ -53,13 +53,16 @@ def test_admin_endpoints_answer_for_an_admin(client, auth_headers, verified_user
         ("/api/v1/admin/quality", "llm"),
         ("/api/v1/admin/pipeline", "renders"),
         ("/api/v1/admin/learners", "learners"),
+        ("/api/v1/admin/staff", "staff"),
     ]:
         r = client.get(path, headers=auth_headers)
         assert r.status_code == 200, f"{path}: {r.text}"
         assert key in r.json()
     me = verified_user["user"]["id"]
-    detail = client.get(f"/api/v1/admin/learners/{me}", headers=auth_headers)
-    assert detail.status_code == 200 and detail.json()["learner"]["id"] == me
+    # Staff are listed under /staff, never as learners.
+    assert me not in {l["id"] for l in client.get("/api/v1/admin/learners", headers=auth_headers).json()["learners"]}
+    assert me in {s["id"] for s in client.get("/api/v1/admin/staff", headers=auth_headers).json()["staff"]}
+    assert client.get(f"/api/v1/admin/learners/{me}", headers=auth_headers).status_code == 404
 
 
 def test_teachers_see_teaching_views_but_not_system_ones(client, auth_headers, verified_user):
