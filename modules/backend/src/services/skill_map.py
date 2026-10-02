@@ -268,3 +268,63 @@ def targets(goal: str, graph: dict) -> list[str]:
         ids = list(graph)
     elif goal.startswith(TRACK_PREFIX):
         ids = [c for c in graph if graph[c]["track"] == goal[len(TRACK_PREFIX):]]
+    else:
+        return [goal]
+    # Motivation first: "What is ML?" opens the course, then the maths it needs.
+    depth, order = _depth(graph), ["ml", "math", "dl", "nlp", "gen", "frontier"]
+    return sorted(ids, key=lambda c: (depth[c], order.index(graph[c]["track"])))
+
+
+def _ancestors(goals: list[str], graph: dict, known: frozenset = frozenset()) -> list[str]:
+    """Targets plus every prerequisite, in a valid learning order (prereqs first).
+    The walk stops at concepts in `known`: mastering one covers its foundations."""
+    order, seen = [], set()
+
+    def visit(cid: str, stack: frozenset) -> None:
+        if cid in seen or cid in stack or cid not in graph:
+            return
+        if cid not in known:
+            for p in graph[cid]["prereqs"]:
+                visit(p, stack | {cid})
+        seen.add(cid)
+        order.append(cid)
+
+    for g in goals:
+        visit(g, frozenset())
+    return order
+
+
+def route(goal: str, graph: dict, mastered: dict[str, dict]) -> list[dict]:
+    known = frozenset(c for c, v in mastered.items() if v.get("state") == "mastered")
+    wanted = targets(goal, graph)
+    single = len(wanted) == 1
+    path = _ancestors(wanted, graph, known)
+    steps = []
+    for cid in path:
+        m = mastered.get(cid, {})
+        state = m.get("state")
+        if state == "mastered":
+            continue
+        unmet = [graph[p]["title"] for p in graph[cid]["prereqs"] if mastered.get(p, {}).get("state") != "mastered"]
+        if state == "practice" and m.get("lapsed"):
+            reason = "Faded since you last used it (missed a refresh). One round of practice."
+        elif state == "practice":
+            reason = f"You scored {round((m['score'] or 0) * 100)}% here. One more round before moving on."
+        elif single and cid == goal:
+            reason = "Your goal."
+        else:
+            users = [graph[c]["title"] for c in graph if cid in graph[c]["prereqs"] and c in path]
+            reason = (f"Needed for {users[0]}." if users
+                      else "Builds the foundation for your goal." if single else "Next in your course.")
+        steps.append({"id": cid, "title": graph[cid]["title"], "track": graph[cid]["track"], "state": state or "new",
+                      "reason": reason, "blocked_by": unmet})
+    # Failed a concept whose prerequisites all look mastered? The gap is
+    # usually in the weakest of them, so recap that one first.
+    recaps = []
+    for s in steps:
+        if s["state"] != "practice":
+            continue
+        scored = [(mastered[p]["score"], p) for p in graph[s["id"]]["prereqs"]
+                  if mastered.get(p, {}).get("state") == "mastered" and mastered[p].get("score") is not None]
+        if scored and not s["blocked_by"]:
+            score, p = min(scored)
