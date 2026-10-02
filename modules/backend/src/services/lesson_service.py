@@ -797,6 +797,10 @@ def lesson_summary(db: Session, lesson: Optional[Lesson]) -> Optional[dict]:
             if n.status == "skipped"
         ],
         "relearning": (lesson.resume_point or {}).get("node_id"),
+        "skill_concept_id": lesson.skill_concept_id,
+        "skill_goal_id": lesson.skill_goal_id,
+        "difficulty": lesson.difficulty,
+        "difficulty_log": (lesson.difficulty_state or {}).get("log", []),
         # Reached the end, but concepts are still to review: not completed.
         "review_pending": lesson.fsm_state == "REVIEW_PENDING",
         "to_review": sum(1 for n in lesson.nodes if n.status == "skipped"),
