@@ -128,29 +128,6 @@ function Filled({ d }: { d: Dashboard }) {
         </Card>
       </div>
     </div>
-          <Card className="p-5">
-            {journey.data ? <StreakCalendar journey={journey.data} /> : journey.isError ? <LoadError onRetry={() => journey.refetch()} /> : <Skeleton className="h-96 rounded-2xl" />}
-          </Card>
-          <Card className="p-5">
-            <h2 className="font-display text-2xl">{t("dash.trend")}</h2>
-            <Trend points={d.score_trend} />
-          </Card>
-        </div>
-      </div>
-
-      {(d.strong_concepts.length > 0 || d.weak_concepts.length > 0) && (
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="p-5">
-            <h3 className="text-sm font-semibold text-sage">{t("dash.strong")}</h3>
-            <div className="mt-3 flex flex-wrap gap-2">{d.strong_concepts.map((c) => <Badge key={c} tone="sage">{c}</Badge>)}</div>
-          </Card>
-          <Card className="p-5">
-            <h3 className="text-sm font-semibold text-marigold-600">{t("dash.weak")}</h3>
-            <div className="mt-3 flex flex-wrap gap-2">{d.weak_concepts.map((c) => <Badge key={c} tone="marigold">{c}</Badge>)}</div>
-          </Card>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -185,10 +162,10 @@ function Resume({ d }: { d: Dashboard }) {
   const l = d.resume_lesson!;
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }}
-      className="ruled relative overflow-hidden rounded-[28px] border border-line bg-surface p-6 pl-20 shadow-[var(--shadow-lift)] sm:p-8 sm:pl-24">
+      className="ruled relative overflow-hidden rounded-[28px] border border-line bg-surface p-6 pl-16 shadow-[var(--shadow-lift)] sm:p-8 sm:pl-24">
       <PlaneMark size={90} className="absolute -right-3 -top-3 rotate-12 opacity-80 animate-float-soft" />
       <p className="font-hand text-xl text-sky-700">{t("dash.resume")}</p>
-      <h2 className="mt-1 max-w-xl font-display text-4xl leading-tight text-ink">{l.title}</h2>
+      <h2 className="mt-1 max-w-xl pr-16 font-display text-3xl leading-tight text-ink sm:text-4xl">{l.title}</h2>
       <div className="mt-5 flex flex-wrap items-center gap-5">
         <Ring value={l.progress_pct} size={64} stroke={6} color="var(--sky-600)" label={<span className="text-sm font-semibold">{n(Math.round(l.progress_pct))}%</span>} />
         <p className="text-sm text-ink-2">{n(l.nodes_completed)} / {n(l.node_count)}</p>
@@ -223,7 +200,7 @@ function Trend({ points }: { points: Dashboard["score_trend"] }) {
 function EmptyState() {
   const { t } = useI18n();
   return (
-    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="ruled mt-10 grid place-items-center rounded-[32px] border border-dashed border-line-2 bg-surface px-6 py-16 text-center">
+    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="ruled grid place-items-center rounded-[32px] border border-dashed border-line-2 bg-surface px-6 py-16 text-center">
       <PlaneMark size={110} animateIn className="animate-float-soft" />
       <h2 className="mt-6 font-display text-4xl">{t("dash.emptyTitle")}</h2>
       <p className="mt-2 max-w-md text-ink-2">{t("dash.emptyBody")}</p>
@@ -234,9 +211,9 @@ function EmptyState() {
 
 function DashSkeleton() {
   return (
-    <div className="mt-8 space-y-6">
+    <div className="space-y-6">
       <Skeleton className="h-44 rounded-[28px]" />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-32 rounded-[var(--radius)]" />)}</div>
+      <Skeleton className="h-24 rounded-[var(--radius)]" />
       <Skeleton className="h-72 rounded-[var(--radius)]" />
     </div>
   );
