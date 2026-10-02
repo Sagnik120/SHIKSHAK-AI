@@ -1,11 +1,13 @@
 from typing import List, Optional, Literal, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class LearnerConstraints(BaseModel):
     level: Literal["beginner", "intermediate", "advanced"]
     language: str
     time_budget_min: Union[int, Literal["multi_day_plan"]]
     style: Optional[str] = None
+    # Live difficulty 1-5 (see explainer/questioner prompts); None = not tracked.
+    difficulty: Optional[int] = Field(default=None, ge=1, le=5)
 
 class LessonNode(BaseModel):
     node_id: str
