@@ -83,6 +83,41 @@ def practice_set(db: Session, lesson: Lesson, user_id: str) -> list[dict]:
 
 GENERATE_MAX = 3
 
+
+def _generated(lesson: Lesson, qid: str):
+    """A Practice Lab question, shaped like an Interaction for grade()."""
+    from types import SimpleNamespace
+
+    for g in (lesson.practice_extra or {}).get("items") or []:
+        if g["id"] == qid:
+            return SimpleNamespace(id=g["id"], lesson_id=lesson.id, node_id=g["node_id"], correct=False,
+                                   question_type=g["type"], expected_concept=g["expected_concept"])
+    return None
+
+
+def _targets(db: Session, lesson: Lesson) -> list[tuple]:
+    """Weakest graded concepts first, with the level to practise them at:
+    one step easier where the learner struggled, one harder as a stretch."""
+    from modules.backend.src.services.lesson_service import MASTERY_THRESHOLD
+
+    level = lesson.difficulty or 2
+    tags: dict[str, str] = {}
+    for q in db.scalars(select(Interaction).where(Interaction.lesson_id == lesson.id,
+                                                  Interaction.correct.is_(False))).all():
+        if q.misconception_tag:
+            tags.setdefault(q.node_id, q.misconception_tag)
+    graded = sorted((n for n in lesson.nodes if n.attempts and n.script_text), key=lambda n: n.mastery_score)
+    out = []
+    for n in graded[:GENERATE_MAX]:
+        weak = n.mastery_score < MASTERY_THRESHOLD
+        out.append((n, max(1, level - 1) if weak else min(5, level + 1), tags.get(n.node_id)))
+    return out
+
+
+def generate(db: Session, lesson: Lesson) -> list[dict]:
+    """New questions for the weakest concepts, grounded in the script the
+    learner actually watched. Replaces the previous generated set."""
+    import uuid
     items.sort(key=lambda it: (not it["needs_practice"],))
     return items
 
