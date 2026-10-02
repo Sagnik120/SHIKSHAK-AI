@@ -17,7 +17,7 @@
 
 **Build Fast with AI Hackathon** · *AI Teacher Track*
 
-[Overview](#-project-overview) · [Features](#-key-features) · [Architecture](#%EF%B8%8F-system-architecture) · [Tech Stack](#%EF%B8%8F-technologies-used) · [Setup](#%EF%B8%8F-setup--installation) · [Run](#-how-to-run-the-project) · [Demo](#-screenshots--demo) · [Team](#-team)
+[Overview](#-project-overview) · [Features](#-key-features) · [Architecture](#%EF%B8%8F-system-architecture) · [Tech Stack](#%EF%B8%8F-technologies-used) · [Setup](#%EF%B8%8F-setup--installation) · [Run](#-how-to-run-the-project) · [Demo](#-demo) · [Team](#-team)
 
 </div>
 
@@ -324,20 +324,10 @@ python scripts/e2e_full_pipeline.py   # full ingestion → lesson → evaluation
 
 ---
 
-## 📸 Screenshots / Demo
+## 🎥 Demo
 
 ### 🎥 Demo video & materials
 **[▶️ Watch the demo video and materials on Google Drive](https://drive.google.com/drive/folders/1ibsr1tZanhtruCBbIwiGkAy0mXx35XLY?usp=drive_link)** · **[🌐 Live demo](https://shikshak-ai.onrender.com/)**
-
-| Home | Dashboard |
-| :---: | :---: |
-| ![Home Page](docs/images/Screenshot_Home_Page.png) | ![Dashboard](docs/images/Screenshot_Dashboard_Page.png) |
-| **New Lesson** | **My Lessons** |
-| ![New Lesson](docs/images/Screenshot_New_Lesson_Page.png) | ![My Lesson](docs/images/Screenshot_My_Lesson_Page.png) |
-| **Classroom** | **Classroom: checkpoint** |
-| ![Study Lesson 1](docs/images/Screenshot_Study_Lesson_Page_1.png) | ![Study Lesson 2](docs/images/Screenshot_Study_Lesson_Page_2.png) |
-| **Progress & Analytics** | |
-| ![Progress Page](docs/images/Screenshot_Progress_Page.png) | |
 
 ---
 
