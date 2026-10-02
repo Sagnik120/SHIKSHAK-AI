@@ -463,3 +463,23 @@ def _place_with_llm(topic: str, graph: dict) -> Optional[dict]:
     try:
         from modules.ai_agent_orchestration.src.adapters.gemini_adapter import get_llm_adapter
 
+        catalog = "\n".join(f"{cid}: {c['title']}" for cid, c in graph.items())
+        prompt = (
+            "You maintain a prerequisite map of AI concepts. Place this new topic on it.\n"
+            f"Topic: {topic}\n\nExisting concept ids:\n{catalog}\n\n"
+            "Reply with JSON only: {\"is_ai_topic\": true|false, \"title\": short canonical title, "
+            f"\"track\": one of {sorted(_TRACK_IDS)}, \"prereqs\": [2-4 existing ids a learner needs first], "
+            "\"summary\": one sentence}"
+        )
+        raw = get_llm_adapter().complete([{"role": "user", "content": prompt}])
+        data = json.loads(re.search(r"\{.*\}", raw or "", re.S).group(0))
+        if data.get("is_ai_topic") is False:
+            raise NotAITopic("That doesn't look like an AI topic.")
+        prereqs = [p for p in data.get("prereqs", []) if p in graph]
+        if not prereqs:
+            return None
+        return {"title": str(data.get("title") or topic)[:80], "track": data.get("track"), "prereqs": prereqs,
+                "summary": str(data.get("summary") or "")[:240]}
+    except NotAITopic:
+        raise
+    except Exception as exc:  # offline, mock adapter, malformed JSON
