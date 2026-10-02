@@ -60,6 +60,8 @@ class GraphRenderer(BaseRenderer):
             import matplotlib
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
+            from modules.avatar_voice.src.visuals.base import use_board_font_in_matplotlib
+            use_board_font_in_matplotlib()
 
             fig, ax = plt.subplots(figsize=(13.44, 10.80), dpi=100)
             fig.patch.set_facecolor("#0f172a")
