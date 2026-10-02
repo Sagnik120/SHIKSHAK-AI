@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { motion } from "motion/react";
-import { ArrowRight, Check, FlaskConical, Loader2, Lock, Play, RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowRight, Check, ChevronDown, Map as MapIcon, FlaskConical, Loader2, Lock, Play, RotateCcw } from "lucide-react";
 import { labsFor } from "@/components/lab/labs";
 import type { JourneyStep } from "@/core/types";
 import { useI18n } from "@/providers/i18n";
@@ -16,19 +16,50 @@ import { cn, EASE } from "@/lib/utils";
 const TXT = {
   en: { title: "Learning path", sub: "Your route to your goal: what's done, what's next and why.", journey: "Your path, step by step",
     done: "Done", review: "Open report", refresh: "Refresh", resume: "Resume", start: "Start", again: "Practise again", recap: "Recap", later: "Coming up",
-    more: "Show more", less: "Show less", lab: "Practice Lab", labSub: "Simulations + code challenges", noGoal: "Pick a goal to see your route", noGoalSub: "Choose one in the panel, or tap a concept on the skill map below." },
+    more: "Show more", less: "Show less", lab: "Practice Lab", labSub: "Simulations + code challenges", noGoal: "Pick a goal to see your route", noGoalSub: "Choose one in the panel, or tap a concept on the skill map below.", map: "Change goal or explore the skill map", mapSub: "See every concept, your mastery, and pick a new destination." },
   hi: { title: "सीखने का रास्ता", sub: "आपके लक्ष्य तक का रास्ता: क्या हो गया, आगे क्या है और क्यों।", journey: "आपका रास्ता, कदम दर कदम",
     done: "पूरा", review: "रिपोर्ट देखें", refresh: "दोहराएँ", resume: "जारी रखें", start: "शुरू करें", again: "फिर अभ्यास करें", recap: "दोहराएँ", later: "आगे",
-    more: "और देखें", less: "कम देखें", lab: "प्रैक्टिस लैब", labSub: "सिमुलेशन + कोड चुनौतियाँ", noGoal: "अपना रास्ता देखने के लिए लक्ष्य चुनें", noGoalSub: "पैनल में चुनें, या नीचे स्किल मैप में किसी अवधारणा पर टैप करें।" },
+    more: "और देखें", less: "कम देखें", lab: "प्रैक्टिस लैब", labSub: "सिमुलेशन + कोड चुनौतियाँ", noGoal: "अपना रास्ता देखने के लिए लक्ष्य चुनें", noGoalSub: "पैनल में चुनें, या नीचे स्किल मैप में किसी अवधारणा पर टैप करें।", map: "लक्ष्य बदलें या स्किल मैप देखें", mapSub: "हर अवधारणा, आपकी महारत, और नया लक्ष्य चुनें।" },
 };
 
 export default function PathPage() {
   const { lang, n } = useI18n();
   const tx = TXT[lang === "hi" ? "hi" : "en"];
   const { data } = useSkillGoal();
+  const [showAll, setShowAll] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
 
-  const done = data?.journey.filter((s) => s.state === "done").length ?? 0;
-  const total = data?.journey.length ?? 0;
+  // "Change goal" links point at #skill-map: open the map when that hash is hit.
+  useEffect(() => {
+    const sync = () => { if (window.location.hash === "#skill-map") setMapOpen(true); };
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  useEffect(() => { if (mapOpen && window.location.hash === "#skill-map") document.getElementById("skill-map")?.scrollIntoView({ behavior: "smooth" }); }, [mapOpen]);
+
+  const journey = data?.journey ?? [];
+  const done = journey.filter((s) => s.state === "done").length;
+  const total = journey.length;
+  const hasPath = !!data?.goal && total > 0;
+
+  // Long routes: show a window around the next step, expandable.
+  const nextIdx = Math.max(0, journey.findIndex((s) => s.next));
+  const from = Math.max(0, nextIdx - 2);
+  const to = Math.min(total, from + 7);
+  const collapsible = total > 8;
+  const visible = !collapsible || showAll ? journey.map((s, i) => [s, i] as const) : journey.slice(from, to).map((s, k) => [s, from + k] as const);
+
+  const labLink = (
+    <Link href="/lab" className="flex items-center gap-3 rounded-[24px] border border-sky-200 bg-sky-50/60 p-4 transition-colors hover:border-sky-400">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface text-sky-600"><FlaskConical className="h-5 w-5" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-ink">{tx.lab}</span>
+        <span className="block text-xs text-ink-2">{tx.labSub}</span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-sky-700" />
+    </Link>
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
@@ -37,43 +68,63 @@ export default function PathPage() {
         <p className="mt-2 text-ink-2">{tx.sub}</p>
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:order-2">
-          <GoalCard />
-          {data && <PlacementCheck map={data} />}
-          <Link href="/lab" className="flex items-center gap-3 rounded-[24px] border border-sky-200 bg-sky-50/60 p-4 transition-colors hover:border-sky-400">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface text-sky-600"><FlaskConical className="h-5 w-5" /></span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink">{tx.lab}</span>
-              <span className="block text-xs text-ink-2">{tx.labSub}</span>
-            </span>
-            <ArrowRight className="h-4 w-4 text-sky-700" />
-          </Link>
-        </aside>
+      {hasPath ? (
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <aside className="space-y-4 lg:sticky lg:top-6 lg:order-2">
+            <GoalCard />
+            {labLink}
+          </aside>
 
-        <section className="min-w-0 lg:order-1">
-          {data?.goal && total > 0 ? (
+          <section className="min-w-0 space-y-4 lg:order-1">
+            <PlacementCheck map={data!} />
             <div className="rounded-[28px] border border-line bg-surface p-5 shadow-[var(--shadow-soft)] sm:p-6">
-              <div className="flex items-end justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <h2 className="font-display text-3xl text-ink">{tx.journey}</h2>
                 <span className="shrink-0 rounded-full bg-sage-100 px-3 py-1 text-xs font-semibold text-sage">{n(done)} / {n(total)}</span>
               </div>
-              <ol className="relative mt-5 space-y-3 before:absolute before:bottom-[42px] before:left-[19px] before:top-[42px] before:w-0.5 before:rounded-full before:bg-gradient-to-b before:from-sage/60 before:via-sky-300 before:to-line">
-                {data.journey.map((s, i) => <Step key={`${s.state}-${s.id}-${i}`} s={s} i={i} goal={data.goal!} tx={tx} />)}
-              </ol>
-            </div>
-          ) : (
-            <div className="ruled grid min-h-64 place-items-center rounded-[28px] border border-dashed border-line-2 bg-surface p-8 text-center">
-              <div>
-                <p className="font-display text-3xl text-ink">{tx.noGoal}</p>
-                <p className="mt-2 text-sm text-ink-2">{tx.noGoalSub}</p>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper-3">
+                <div className="h-full rounded-full bg-sage transition-[width] duration-700" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
               </div>
+              <ol className="relative mt-5 space-y-3 before:absolute before:bottom-[42px] before:left-[19px] before:top-[42px] before:w-0.5 before:rounded-full before:bg-gradient-to-b before:from-sage/60 before:via-sky-300 before:to-line">
+                {visible.map(([s, i]) => <Step key={`${s.state}-${s.id}-${i}`} s={s} i={i} goal={data!.goal!} tx={tx} />)}
+              </ol>
+              {collapsible && (
+                <button onClick={() => setShowAll((v) => !v)} className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-line py-2 text-sm font-medium text-sky-700 hover:border-sky-300 hover:bg-sky-50">
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", showAll && "rotate-180")} />
+                  {showAll ? tx.less : `${tx.more} (${n(total - (to - from))})`}
+                </button>
+              )}
             </div>
-          )}
-        </section>
-      </div>
+          </section>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <GoalCard />
+          {data && <PlacementCheck map={data} />}
+          {labLink}
+        </div>
+      )}
 
-      <SkillMap />
+      {hasPath ? (
+        <div id="skill-map" className="scroll-mt-24">
+          <button onClick={() => setMapOpen((v) => !v)} aria-expanded={mapOpen}
+            className="flex w-full items-center gap-3 rounded-[24px] border border-line bg-surface px-5 py-4 text-left shadow-[var(--shadow-soft)] hover:border-sky-300">
+            <MapIcon className="h-5 w-5 shrink-0 text-sky-600" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-ink">{tx.map}</span>
+              <span className="block text-xs text-ink-2">{tx.mapSub}</span>
+            </span>
+            <ChevronDown className={cn("h-5 w-5 shrink-0 text-ink-3 transition-transform", mapOpen && "rotate-180")} />
+          </button>
+          <AnimatePresence initial={false}>
+            {mapOpen && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
+                <div className="pt-4"><SkillMap /></div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : <SkillMap />}
     </div>
   );
 }
