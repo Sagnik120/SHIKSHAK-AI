@@ -53,3 +53,55 @@ def test_pass_pushes_next_review_out(client, auth_headers, db):
     assert out["finished"] and out["passed"] and out["next_in_days"] == 5
     assert client.get("/api/v1/spaced-review", headers=auth_headers).json()["due"] == []
 
+
+def test_fail_reopens_concept_until_relearned(client, auth_headers, db):
+    lesson = _mastered(client, auth_headers, db)
+    client.get("/api/v1/spaced-review", headers=auth_headers)
+    out = _answer_all(client, auth_headers, db, right=False)
+    assert out["finished"] and not out["passed"] and out["next_in_days"] == 2
+
+    states = {c["id"]: (c["mastery"] or {}).get("state") for c in client.get("/api/v1/skill-map", headers=auth_headers).json()["concepts"]}
+    assert states["gradient_descent"] == "practice"                    # back on the path
+    node = db.query(LessonNodeRow).filter_by(lesson_id=lesson.id).one()
+    assert node.mastery_score == 0.9                                    # lesson untouched
+
+    db.refresh(lesson)
+    lesson.updated_at = datetime.now(timezone.utc) + timedelta(minutes=1)  # a newer lesson masters it again
+    db.commit()
+    states = {c["id"]: (c["mastery"] or {}).get("state") for c in client.get("/api/v1/skill-map", headers=auth_headers).json()["concepts"]}
+    assert states["gradient_descent"] == "mastered"
+
+
+def test_cannot_start_a_concept_that_is_not_due(client, auth_headers):
+    assert client.post("/api/v1/spaced-review/mamba/start", headers=auth_headers).status_code == 409
+
+
+def test_placement_concepts_are_reviewed_and_spread_out(client, auth_headers, db):
+    from modules.backend.src.services import placement
+    answers = []
+    while True:
+        out = placement.step(answers)
+        if out["done"]:
+            break
+        i = placement._INDEX[out["next"]["id"]]
+        answers.append({"id": out["next"]["id"], "choice": placement._shown(i)[1]})
+    client.post("/api/v1/skill-map/placement", json={"answers": answers}, headers=auth_headers)
+    user = db.query(User).one()
+    user.placement_json = {**user.placement_json, "at": (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()}
+    db.commit()
+
+    due = client.get("/api/v1/spaced-review", headers=auth_headers).json()["due"]
+    assert len(due) == 2 and all(d["from_placement"] for d in due)     # staggered: day 2 and day 3 only
+    cid = due[0]["id"]
+    r = client.post(f"/api/v1/spaced-review/{cid}/start", headers=auth_headers)
+    assert r.status_code == 200 and len(r.json()["questions"]) == 2
+    db.refresh(user)
+    results = [client.post(f"/api/v1/spaced-review/{cid}/answer", headers=auth_headers,
+                           json={"question_id": q["id"], "answer": "something unrelated entirely"}).json()
+               for q in r.json()["questions"]]
+    assert results[-1]["finished"] and not results[-1]["passed"]
+    db.expire_all()  # the requests above used their own sessions
+    m = skill_map.snapshot(db, user.id, cid)
+    states = {c["id"]: (c["mastery"] or {}) for c in m["concepts"]}
+    assert states[cid]["state"] == "practice" and states[cid]["lapsed"]
+    assert m["route"][-1]["reason"].startswith("Faded")
