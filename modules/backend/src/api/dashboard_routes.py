@@ -83,3 +83,33 @@ def add_skill_concept(body: NewConcept, user: User = Depends(get_current_user)):
         raise HTTPException(status_code=422, detail=str(exc))
 
 
+class PlacementBody(BaseModel):
+    answers: list[dict] = Field(default_factory=list, max_length=12)
+
+
+@router.post("/skill-map/placement/next")
+def placement_next(body: PlacementBody, user: User = Depends(get_current_user)):
+    """Grade the answers so far and return the next question (or that it's done)."""
+    from modules.backend.src.services import placement
+    try:
+        return placement.step(body.answers)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@router.post("/skill-map/placement")
+def placement_save(body: PlacementBody, user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
+    """Finish the check: save what's known and the suggested starting difficulty."""
+    from modules.backend.src.services import placement
+    try:
+        user.placement_json = placement.result(body.answers, skill_map.concepts())
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    db.commit()
+    return {"placement": user.placement_json, "map": skill_map.snapshot(db, user.id, user.skill_goal_id)}
+
+
+@router.delete("/skill-map/placement")
+def placement_reset(user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
+    user.placement_json = None
+    db.commit()
