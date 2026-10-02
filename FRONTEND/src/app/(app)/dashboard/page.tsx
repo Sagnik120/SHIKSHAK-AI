@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { GoalCard } from "@/components/lesson/goal-card";
+import { ReviewDueCard } from "@/components/lesson/spaced-review";
 import { motion } from "motion/react";
 import { ArrowRight, BookCheck, Clock, Flame, Gauge, Hand, Plus, RefreshCw, Target, Trophy } from "lucide-react";
 import { api } from "@/core/api";
@@ -33,8 +35,8 @@ export default function DashboardPage() {
   const first = user?.full_name.split(" ")[0] ?? "";
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-10 lg:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+      <header className="flex flex-wrap items-end justify-between gap-4 pb-2">
         <div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-hand text-xl text-sky-700">{t(greetingKey())},</motion.p>
           <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }} className="font-display text-5xl text-ink sm:text-6xl">
@@ -45,9 +47,12 @@ export default function DashboardPage() {
         <Button href="/new" icon={<Plus className="h-4 w-4" />}>{t("nav.newLesson")}</Button>
       </header>
 
+      {d?.resume_lesson && <Resume d={d} />}
+      <GoalCard />
+      <ReviewDueCard />
       {q.isLoading && <DashSkeleton />}
       {q.isError && (
-        <Card className="mt-8 flex items-center justify-between p-6">
+        <Card className="flex items-center justify-between p-6">
           <p className="text-ink-2">{(q.error as Error).message}</p>
           <Button variant="outline" size="sm" onClick={() => q.refetch()} icon={<RefreshCw className="h-4 w-4" />}>{t("common.retry")}</Button>
         </Card>
@@ -58,6 +63,11 @@ export default function DashboardPage() {
   );
 }
 
+function Filled({ d }: { d: Dashboard }) {
+  const { t, n } = useI18n();
+  const s = d.stats;
+  const journey = useQuery({ queryKey: ["journey"], queryFn: api.journey, retry: 1 });
+  const stats = [
 function Filled({ d }: { d: Dashboard }) {
   const { t, n } = useI18n();
   const s = d.stats;
