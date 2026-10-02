@@ -26,7 +26,8 @@ class QuestionerAgent(BaseAgent):
     def generate_question(
         self,
         node: LessonNode,
-        recent_segment: Optional[TeachingSegment] = None
+        recent_segment: Optional[TeachingSegment] = None,
+        difficulty: Optional[int] = None,
     ) -> InteractionEvent:
         """
         Generate an InteractionEvent for a LessonNode.
@@ -36,16 +37,20 @@ class QuestionerAgent(BaseAgent):
         segment_data = {}
         if recent_segment is not None:
             if hasattr(recent_segment, "model_dump"):
-                segment_data = recent_segment.model_dump()
+                segment_data = recent_segment.model_dump(exclude_none=True)
             elif isinstance(recent_segment, dict):
                 segment_data = recent_segment
+            # The question only needs what was said, not the diagram spec or avatar cue.
+            segment_data = {k: v for k, v in segment_data.items() if k in ("script_text", "language", "notes")}
 
         user_content = {
-            "node": node.model_dump(),
+            "node": node.model_dump(exclude_none=True),
             "recent_teaching_segment": segment_data
         }
+        if difficulty:
+            user_content["difficulty_level"] = difficulty
             
-        user_prompt = f"Please generate a question to assess understanding of this node:\n{json.dumps(user_content, indent=2)}"
+        user_prompt = f"Please generate a question to assess understanding of this node:\n{self.to_prompt_json(user_content)}"
         
         event = self.call_llm_json(system_prompt, user_prompt, InteractionEvent, max_retries=2)
         if event.type != "mcq":
