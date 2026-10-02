@@ -48,3 +48,53 @@ def _schedule(user: User, mastery: dict) -> dict:
     new = [cid for cid, m in mastery.items() if m.get("state") == "mastered" and cid not in reviews]
     # Placement can mark dozens known at once: spread those one per day, deepest
     # (most likely to fade) first, instead of making them all due together.
+    from modules.backend.src.services import skill_map
+    depth = skill_map._depth(skill_map.concepts())
+    placed = sorted((c for c in new if mastery[c].get("source") == "placement"), key=lambda c: -depth.get(c, 0))
+    stagger = {c: i for i, c in enumerate(placed)}
+    for cid in new:
+        m = mastery[cid]
+        learned = _dt(m.get("learned_at")) or _dt((user.placement_json or {}).get("at")) or _now()
+        first = learned + timedelta(days=INTERVALS[0] + stagger.get(cid, 0))
+        reviews[cid] = {"interval": INTERVALS[0], "last": learned.isoformat(), "due": first.isoformat(), "lapsed": None}
+        changed = True
+    if changed:
+        user.review_json = reviews
+    return reviews
+
+
+def due(db: Session, user: User) -> list[dict]:
+    """Concepts due for review, most overdue first."""
+    from modules.backend.src.services import skill_map
+
+    graph = skill_map.concepts()
+    mastery = skill_map.mastery(db, user.id, graph)
+    reviews = _schedule(user, mastery)
+    now, out = _now(), []
+    for cid, r in reviews.items():
+        m = mastery.get(cid, {})
+        if cid not in graph or m.get("state") != "mastered":
+            continue  # lapsed concepts are relearned on the path, not reviewed
+        when = _dt(r["due"])
+        if when and when <= now:
+            out.append({"id": cid, "title": graph[cid]["title"], "lesson_id": m.get("lesson_id"),
+                        "from_placement": m.get("source") == "placement",
+                        "days_since": max(0, (now - _dt(r["last"])).days), "overdue_days": (now - when).days,
+                        "interval": r["interval"], "in_progress": bool(r.get("pending"))})
+    out.sort(key=lambda x: -x["overdue_days"])
+    return out
+
+
+def start(db: Session, user: User, cid: str) -> dict:
+    """Two short questions from the script the learner watched (reused if already started)."""
+    item = next((d for d in due(db, user) if d["id"] == cid), None)
+    if item is None:
+        raise ReviewError("That concept isn't due for review.")
+    reviews = dict(user.review_json or {})
+    entry = dict(reviews[cid])
+    if not entry.get("pending"):
+        entry["pending"], entry["answers"] = _questions(db, item, user), {}
+        reviews[cid] = entry
+        user.review_json = reviews
+    return _public(cid, item["title"], entry)
+
