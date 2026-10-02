@@ -60,6 +60,8 @@ export type ClassroomState = {
   adaptation: { action: "MODIFY" | "REGENERATE" | "HUMAN"; slow: boolean } | null;
   videoVisible: boolean;
   stopped: boolean;
+  /** Live difficulty 1-5; null for lessons from before the feature. */
+  difficulty: number | null;
   log: Array<{ at: number; text: string }>;
   checkpoints: { total: number; passed: number };
   toast: { id: number; key: MessageKey; tone: "info" | "success" | "warning" | "error"; raw?: string } | null;
@@ -127,12 +129,15 @@ export class ClassroomController {
       progress: { pct: 0, done: 0, total: 0 }, overlay: null, question: null, grading: false, feedback: null,
       feedbackFor: null, qa: [], notes: null, collected: [], citation: null, isDocument: false, adaptation: null,
       videoVisible: false, stopped: false, log: [], checkpoints: { total: 0, passed: 0 }, toast: null,
+      difficulty: null,
     };
   }
 
   /* -- store ------------------------------------------------------------ */
   subscribe = (fn: () => void) => { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; };
   getSnapshot = () => this.state;
+  private set(patch: Partial<ClassroomState>) {
+    if (this.disposed) return;
   private set(patch: Partial<ClassroomState>) {
     if (this.disposed) return;
     this.state = { ...this.state, ...patch };
