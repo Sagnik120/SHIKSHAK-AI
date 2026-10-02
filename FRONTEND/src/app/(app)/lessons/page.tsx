@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useState } from "react";
+import { useCallback, useDeferredValue, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { FileText, Plus, Sparkles, Trash2 } from "lucide-react";
@@ -10,6 +10,7 @@ import { api } from "@/core/api";
 import type { Lesson, LessonStatus } from "@/core/types";
 import { useI18n } from "@/providers/i18n";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge, Ring, Skeleton } from "@/components/ui/primitives";
 import { GlassSearch } from "@/components/ui/glass-search";
 import { STATUS_TONE, lessonHref, relativeDays } from "@/lib/lesson";
@@ -25,10 +26,18 @@ export default function LessonsPage() {
   const term = useDeferredValue(search.trim());
   const q = useQuery({ queryKey: ["lessons", "list", status, term], queryFn: () => api.listLessons({ status, search: term || undefined, limit: 100 }), placeholderData: keepPreviousData });
 
-  const del = async (l: Lesson) => {
-    if (!window.confirm(t("lessons.deleteConfirm", { t: l.title }))) return;
-    try { await api.deleteLesson(l.id); toast.success(t("lessons.deleted")); qc.invalidateQueries({ queryKey: ["lessons"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }
-    catch (e) { toast.error((e as Error).message); }
+  const [pending, setPending] = useState<Lesson | null>(null);
+  const del = (l: Lesson) => setPending(l);
+  const closeConfirm = useCallback(() => setPending(null), []);
+  const confirmDelete = async () => {
+    if (!pending) return;
+    try {
+      await api.deleteLesson(pending.id);
+      toast.success(t("lessons.deleted"));
+      setPending(null);
+      qc.invalidateQueries({ queryKey: ["lessons"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   return (
@@ -84,6 +93,7 @@ export default function LessonsPage() {
           </AnimatePresence>
         </motion.div>
       )}
+      <ConfirmDialog open={!!pending} title={pending ? t("lessons.deleteConfirm", { t: pending.title }) : ""} onConfirm={confirmDelete} onClose={closeConfirm} />
     </div>
   );
 }
