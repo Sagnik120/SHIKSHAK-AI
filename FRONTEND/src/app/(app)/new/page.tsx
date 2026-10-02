@@ -38,6 +38,11 @@ export default function NewLessonPage() {
   const [style, setStyle] = useState<string | null>(null);
   const [status, setStatus] = useState<ButtonStatus>("idle");
   const [plan, setPlan] = useState<{ id: string; nodes: PlanNode[] } | null>(null);
+  // Prefill from the skill map (/new?topic=…&level=…&concept=…&goal=…).
+  const [path, setPath] = useState<{ concept: string; goal: string } | null>(null);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const tp = p.get("topic"), lv = p.get("level");
   // Prefill from the learning path (/new?topic=…&level=…).
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
