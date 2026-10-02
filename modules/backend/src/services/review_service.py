@@ -148,3 +148,42 @@ def _questions(db: Session, item: dict, user: User) -> list[dict]:
     rows = [n for n in lesson.nodes if n.script_text]
     # The nodes that taught this concept; a lesson tagged with it covers all its nodes.
     mine = [n for n in rows if lesson.skill_concept_id == item["id"] or skill_map.match_concept(n.concept, graph) == item["id"]]
+    rows = (mine or rows)[:QUESTIONS]
+    if not rows:
+        return _concept_questions(item, graph, user, questioner)
+    out = []
+    for i in range(QUESTIONS):
+        row = rows[i % len(rows)]
+        node = LessonNode(node_id=row.node_id, concept=row.concept, depth=row.depth, est_minutes=row.est_minutes,
+                          visual_type=row.visual_type, checkpoint_question=True)
+        segment = TeachingSegment(node_id=row.node_id, script_text=row.script_text, language=lesson.language or "en",
+                                  visual_spec=row.visual_json or {"type": row.visual_type or "diagram", "content": row.concept},
+                                  avatar_cue="neutral", notes=row.notes_json or None)
+        ev = questioner.generate_question(node, segment, difficulty=lesson.difficulty)
+        out.append({"id": "r" + uuid.uuid4().hex[:15], "node_id": row.node_id, "question_text": ev.question_text,
+                    "type": ev.type, "options": list(ev.options or []), "expected_concept": ev.expected_concept})
+    return out
+
+
+def _concept_questions(item: dict, graph: dict, user: User, questioner) -> list[dict]:
+    """No lesson taught it (known from placement): ask about the concept's core
+    idea, described from the map, at the learner's placement level."""
+    from modules.ai_agent_orchestration.src.schemas.lesson import LessonNode
+    from modules.ai_agent_orchestration.src.schemas.teaching import TeachingSegment
+
+    c = graph[item["id"]]
+    pre = ", ".join(graph[p]["title"] for p in c["prereqs"] if p in graph)
+    script = (f"Review of {c['title']}: a core idea in AI that builds on {pre}. "
+              if pre else f"Review of {c['title']}: a foundational idea in AI. ")
+    script += "The questions check the main idea, why it matters, and a simple example of it."
+    level = (user.placement_json or {}).get("difficulty")
+    node = LessonNode(node_id=f"review_{item['id']}", concept=c["title"], depth="core", est_minutes=2,
+                      visual_type="diagram", checkpoint_question=True)
+    segment = TeachingSegment(node_id=node.node_id, script_text=script, language=user.preferred_language or "en",
+                              visual_spec={"type": "diagram", "content": c["title"]}, avatar_cue="neutral", notes=None)
+    out = []
+    for _ in range(QUESTIONS):
+        ev = questioner.generate_question(node, segment, difficulty=level)
+        out.append({"id": "r" + uuid.uuid4().hex[:15], "node_id": node.node_id, "question_text": ev.question_text,
+                    "type": ev.type, "options": list(ev.options or []), "expected_concept": ev.expected_concept})
+    return out
