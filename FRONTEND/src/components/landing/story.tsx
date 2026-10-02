@@ -263,7 +263,7 @@ export function Grounded() {
           <motion.div initial={{ rotate: 3, y: 30, opacity: 0 }} animate={inView ? { rotate: 1.5, y: 0, opacity: 1 } : {}} transition={{ duration: 0.8, ease: EASE }}
             className="ruled relative rounded-[6px] border border-line bg-surface px-10 pb-12 pt-10 shadow-[var(--shadow-lift)]">
             <div className="absolute inset-y-0 left-7 w-px bg-margin/70" />
-            <p className="font-display text-2xl text-ink">9.4 Second Law of Motion</p>
+            <p className="font-display text-2xl text-ink">9.4 Gradient Descent</p>
             {[92, 78, 85].map((w, i) => <div key={i} className="mt-[13px] h-2.5 rounded bg-paper-3" style={{ width: `${w}%` }} />)}
             <p className="relative mt-4 text-[0.95rem] leading-7 text-ink-2">
               <motion.span className="absolute -inset-x-1 inset-y-0 origin-left rounded bg-marigold/45" initial={{ scaleX: 0 }} animate={inView ? { scaleX: 1 } : {}} transition={{ delay: 0.7, duration: 0.9, ease: EASE }} />
