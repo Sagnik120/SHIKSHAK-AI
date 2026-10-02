@@ -9,6 +9,7 @@ Follow these strict constraints:
 5. `expected_concept`:
    - For `mcq`: copy the text of the ONE correct option EXACTLY, character for character. It is compared to the option the learner picks, so anything else marks every learner wrong.
    - For every other type: state the specific understanding a correct answer must show; the grader compares the learner's own words against it.
+6. If `difficulty_level` is set (1-5), pitch the item to it: 1 = recall the key idea; 2 = recognise it in a simple example; 3 = apply it to a new case; 4 = combine it with another idea or calculate; 5 = transfer it to an unfamiliar situation. It must still be answerable from `recent_teaching_segment` alone.
 
 JSON Schema Requirement:
 {
