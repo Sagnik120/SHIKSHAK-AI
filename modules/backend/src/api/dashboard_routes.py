@@ -1,11 +1,12 @@
 """Dashboard, learner profile, and progress analytics — all computed from SQLite."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from modules.backend.src.db.base import get_db
 from modules.backend.src.db.models import User
 from modules.backend.src.deps import get_current_user
-from modules.backend.src.services import lesson_service
+from modules.backend.src.services import lesson_service, skill_map
 
 router = APIRouter(tags=["dashboard"])
 
@@ -46,3 +47,29 @@ def learner_journey(user: User = Depends(get_current_user), db: Session = Depend
     from modules.backend.src.services import journey_service
 
     return journey_service.journey(db, user)
+
+
+class NewConcept(BaseModel):
+    topic: str = Field(min_length=2, max_length=80)
+
+
+@router.get("/skill-map")
+def get_skill_map(goal: str | None = None, user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
+    """AI concept graph with this learner's mastery, plus a route to `goal`
+    (defaults to the learner's saved goal)."""
+    return skill_map.snapshot(db, user.id, goal or user.skill_goal_id)
+
+
+class GoalBody(BaseModel):
+    goal: str | None = Field(default=None, max_length=80)
+
+
+@router.patch("/skill-map/goal")
+def set_skill_goal(body: GoalBody, user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
+    """Save (or clear, with null) the learner's goal."""
+    if body.goal is not None and not skill_map.valid_goal(body.goal, skill_map.concepts()):
+        raise HTTPException(status_code=422, detail="Unknown goal.")
+    user.skill_goal_id = body.goal
+    db.commit()
+    return skill_map.snapshot(db, user.id, body.goal)
+
