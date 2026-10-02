@@ -58,16 +58,14 @@ export default function ClassroomPage() {
       {/* top bar */}
       <header className="flex items-center gap-3 border-b border-line bg-paper/90 px-4 py-2.5 backdrop-blur lg:px-6">
         <Link href="/dashboard" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-ink-2 hover:text-ink" aria-label={t("class.leave")}>
-    <div className="flex min-h-dvh flex-col bg-paper lg:h-dvh lg:overflow-hidden">
-      {/* top bar */}
-      <header className="flex items-center gap-3 border-b border-line bg-paper/90 px-4 py-2.5 backdrop-blur lg:px-6">
-        <Link href="/dashboard" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-ink-2 hover:text-ink" aria-label={t("class.leave")}>
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-xl leading-tight text-ink sm:text-2xl" data-testid="lesson-title">{s.title || "…"}</p>
           <p className="truncate text-xs text-ink-3">{s.statusKey ? t(s.statusKey) : ""}</p>
         </div>
+        <PathChip lessonId={id} />
+        {s.difficulty != null && <DifficultyMeter level={s.difficulty} />}
         <Progress s={s} />
         <span className={cn("hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:inline-flex", conn.tone)} data-testid="connection">{conn.icon}{t(conn.key)}</span>
         <LanguageToggle className="hidden md:flex" />
@@ -133,5 +131,19 @@ function Progress({ s }: { s: ClassroomState }) {
       </div>
       <span className="text-xs tabular-nums text-ink-3" data-testid="progress-label">{n(s.progress.done)}/{n(s.progress.total)}</span>
     </div>
+  );
+}
+
+/* Live difficulty: five dots, filled up to the current level. */
+function DifficultyMeter({ level }: { level: number }) {
+  const { t, n } = useI18n();
+  return (
+    <span className="hidden items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 md:inline-flex" title={t("class.level", { n: n(level) })} data-testid="difficulty">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <motion.span key={i} className={cn("h-1.5 w-1.5 rounded-full", i <= level ? "bg-sky-500" : "bg-line-2")}
+          animate={{ scale: i === level ? [1, 1.6, 1] : 1 }} transition={{ duration: 0.5 }} />
+      ))}
+      <span className="text-xs text-ink-3">{t("class.level", { n: n(level) })}</span>
+    </span>
   );
 }
