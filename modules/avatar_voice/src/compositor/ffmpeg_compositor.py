@@ -214,7 +214,7 @@ class FFmpegCompositor:
                     "-i", visual_result.image_path,
                 ] + audio_input + [
                     "-c:v", "libx264",
-                    "-preset", "ultrafast",
+                    "-preset", "veryfast", "-crf", "20",
                     "-tune", "stillimage",
                     "-pix_fmt", "yuv420p",
                     "-shortest",
@@ -296,7 +296,7 @@ class FFmpegCompositor:
                 f"[0:v]scale={PIP_W}:{PIP_H}[avatar]; "
                 f"color=c=#0f172a:s=1920x1080:r=24:d={duration_sec}[bg]; "
                 f"[bg][vis]overlay=0:0[bg_vis]; "
-                f"[bg_vis]{PIP_PANEL_FILTER}[bg_panel]; "
+                f"[bg_vis]null[bg_panel]; "
                 f"[bg_panel][avatar]overlay={PIP_X}:{PIP_Y}[outv]"
             )
 
@@ -305,7 +305,7 @@ class FFmpegCompositor:
                 "-map", "[outv]",
                 "-map", f"{audio_idx}:a",
                 "-c:v", "libx264",
-                "-preset", "ultrafast",
+                "-preset", "veryfast", "-crf", "20",
                 "-pix_fmt", "yuv420p",
                 "-c:a", "aac",
                 "-shortest",
@@ -318,7 +318,7 @@ class FFmpegCompositor:
                 f"[0:v]scale={PIP_W}:{PIP_H}[avatar]; "
                 f"color=c=#0f172a:s=1920x1080:r=24:d={duration_sec}[bg]; "
                 f"[bg][vis]overlay=0:0[bg_vis]; "
-                f"[bg_vis]{PIP_PANEL_FILTER}[bg_panel]; "
+                f"[bg_vis]null[bg_panel]; "
                 f"[bg_panel][avatar]overlay={PIP_X}:{PIP_Y}[outv]"
             )
 
@@ -335,7 +335,7 @@ class FFmpegCompositor:
                 "-map", "[outv]",
                 "-map", "2:a",
                 "-c:v", "libx264",
-                "-preset", "ultrafast",
+                "-preset", "veryfast", "-crf", "20",
                 "-pix_fmt", "yuv420p",
                 "-c:a", "aac",
                 "-shortest",
@@ -401,7 +401,8 @@ class FFmpegCompositor:
 
             draw.rounded_rectangle([1380, 440, 1880, 500], radius=8, fill=(30, 41, 59, 255), outline=(6, 182, 212, 255), width=2)
             try:
-                font = ImageFont.load_default()
+                from modules.avatar_voice.src.visuals.base import BaseRenderer
+                font = BaseRenderer._get_font(None, 26, bold=True)
             except Exception:
                 font = None
             draw.text((1630, 470), "AI TEACHER (SHIKSHAK)", fill=(248, 250, 252, 255), font=font, anchor="mm")
