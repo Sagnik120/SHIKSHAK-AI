@@ -3,8 +3,10 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { PathNextCard } from "@/components/lesson/path-progress";
+import { WhyLog } from "@/components/lesson/why-log";
 import { motion } from "motion/react";
-import { ArrowRight, Check, CircleDot, Download, Hand, Plus, RefreshCw } from "lucide-react";
+import { ArrowRight, Check, CircleDot, Download, Hand, Lightbulb, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/core/api";
 import type { LessonDetail } from "@/core/types";
@@ -48,6 +50,9 @@ function Report({ l }: { l: LessonDetail }) {
   const mastered = l.nodes.filter((x) => x.status === "mastered").length;
   const reexplained = l.nodes.reduce((s, x) => s + x.times_reexplained, 0);
   const helped = l.escalations.filter((e) => e.status !== "open");
+  const [busy, setBusy] = useState(false);
+
+  const download = async () => {
   const [busy, setBusy] = useState(false);
 
   const download = async () => {
