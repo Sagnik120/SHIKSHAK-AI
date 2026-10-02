@@ -9,6 +9,12 @@ Follow these strict constraints:
    - `weak_concepts` and `recurring_misconceptions`: where one of these is a prerequisite for, or directly relevant to, the current topic, give it its own early node (depth "intro") that re-teaches it before the harder material, and set `checkpoint_question` to true for that node.
    - `strong_concepts`: cover these briefly or fold them into another node — do not spend a full node re-teaching something already mastered.
    - The current topic or document still decides WHAT the lesson is about. Never add a node that the topic/document does not support just because it appears in the profile, and never mention the profile in the concept text.
+6. If `learner_profile.learning_path` is present, this lesson is one step on the learner's personal route toward `goal`:
+   - Teach `concept` as the lesson's subject.
+   - `mastered_prerequisites`: assume them; reference them in one line, never re-teach.
+   - `weak_prerequisites` / `not_yet_learned`: open with a short recap node (depth "intro", `checkpoint_question` true) covering just what this concept needs from them.
+   - `previous_attempt_percent` present: the learner attempted this before and struggled; explain it from a different angle with simpler steps.
+   - `next_on_path` present: make the last node bridge towards it (why this concept is needed for it). Do not teach it.
 
 JSON Schema Requirement:
 The output must exactly match this JSON schema structure:
