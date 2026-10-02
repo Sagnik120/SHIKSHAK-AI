@@ -271,6 +271,7 @@ export const api = {
   relearnConcept: (id: string, nodeId: string) =>
     request<LessonDetail>(`/lessons/${enc(id)}/nodes/${enc(nodeId)}/relearn`, { method: "POST" }),
   practice: (id: string) => request<PracticeSet>(`/lessons/${enc(id)}/practice`),
+  generatePractice: (id: string) => request<PracticeSet>(`/lessons/${enc(id)}/practice/generate`, { method: "POST" }),
   answerPractice: (id: string, interactionId: string, answer: string) =>
     request<PracticeResult>(`/lessons/${enc(id)}/practice/${enc(interactionId)}`, {
       method: "POST", body: { answer },
