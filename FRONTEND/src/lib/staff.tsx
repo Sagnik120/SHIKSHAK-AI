@@ -10,7 +10,7 @@ export const STAFF_TABS: Array<{ v: StaffTab; k: MessageKey; icon: React.ReactNo
   { v: "live", k: "admin.live", icon: <Radio className="h-[18px] w-[18px]" /> },
   { v: "escalations", k: "admin.escalations", icon: <Hand className="h-[18px] w-[18px]" /> },
   { v: "insights", k: "admin.insights", icon: <Brain className="h-[18px] w-[18px]" /> },
-  { v: "learners", k: "admin.learners", icon: <Users className="h-[18px] w-[18px]" /> },
+  { v: "learners", k: "admin.users", icon: <Users className="h-[18px] w-[18px]" /> },
   { v: "quality", k: "admin.quality", icon: <Sparkles className="h-[18px] w-[18px]" />, adminOnly: true },
   { v: "pipeline", k: "admin.pipeline", icon: <Server className="h-[18px] w-[18px]" />, adminOnly: true },
 ];

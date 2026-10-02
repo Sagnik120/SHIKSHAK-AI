@@ -8,7 +8,7 @@
 import type {
   Dashboard, Lesson, LessonDetail, LessonList, PracticeSet, PracticeResult, User, TokenResponse,
   DocumentInfo, AdminOverview, AdminLive, AdminEscalations, AdminInsights, AdminQuality,
-  AdminPipeline, AdminLearners, AdminLearnerDetail, Analytics, SavedNote, Journey,
+  AdminPipeline, AdminLearners, AdminLearnerDetail, AdminStaff, Analytics, SavedNote, Journey,
 } from "./types";
 
 export const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000").replace(/\/+$/, "");
@@ -308,6 +308,7 @@ export const api = {
     quality: () => request<AdminQuality>("/admin/quality"),
     pipeline: () => request<AdminPipeline>("/admin/pipeline"),
     learners: (q = "") => request<AdminLearners>(`/admin/learners${q ? `?q=${enc(q)}` : ""}`),
+    staff: (q = "") => request<AdminStaff>(`/admin/staff${q ? `?q=${enc(q)}` : ""}`),
     learner: (id: string) => request<AdminLearnerDetail>(`/admin/learners/${enc(id)}`),
   },
 };

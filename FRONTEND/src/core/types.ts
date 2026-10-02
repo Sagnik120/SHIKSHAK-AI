@@ -283,9 +283,12 @@ export interface AdminEscalations {
   escalations: Array<Escalation & {
     learner: string; learner_email: string; lesson_title: string;
     last_question?: string | null; last_answer?: string | null; wrong_answers: number;
-    minutes_open: number;
+    minutes_open: number; needs_mentor: boolean; learner_moved_on: boolean;
   }>;
   counts: Record<string, number>;
+}
+export interface AdminStaff {
+  staff: Array<Pick<User, "id" | "full_name" | "email" | "avatar_color" | "avatar_url"> & { role: "admin" | "teacher"; created_at: string }>;
 }
 export interface AdminInsights {
   hardest_concepts: Array<{ concept: string; attempts: number; accuracy_pct: number; learners: number }>;
