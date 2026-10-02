@@ -43,10 +43,8 @@ export default function NewLessonPage() {
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const tp = p.get("topic"), lv = p.get("level");
-  // Prefill from the learning path (/new?topic=…&level=…).
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    const tp = p.get("topic"), lv = p.get("level");
+    const concept = p.get("concept"), goal = p.get("goal");
+    if (concept && goal) setPath({ concept, goal });
     if (tp) { setSource("topic"); setTopic(tp); }
     if (lv && (LEVELS as readonly string[]).includes(lv)) setLevel(lv);
   }, []);
@@ -62,6 +60,8 @@ export default function NewLessonPage() {
         topic: source === "topic" ? topic.trim() : null,
         document_id: source === "doc" ? doc!.document_id : null,
         level, language, time_budget_min: budget, style,
+        // Only while the topic is still the one the map filled in.
+        ...(path && source === "topic" ? { skill_concept_id: path.concept, skill_goal_id: path.goal } : {}),
       });
       id = created.lesson_id;
       const r = await api.generatePlan(id);
@@ -83,6 +83,11 @@ export default function NewLessonPage() {
           <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4, ease: EASE }}>
             <h1 className="font-display text-5xl text-ink sm:text-6xl">{t("new.title")}</h1>
             <p className="mt-2 max-w-xl text-ink-2">{t("new.sub")}</p>
+            {path && source === "topic" && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm text-sky-700">
+                <Sparkles className="h-3.5 w-3.5" />{lang === "hi" ? "आपके रास्ते का एक कदम: यह पाठ आपकी प्रगति के अनुसार बनेगा" : "A step on your route: this lesson is tailored to what you already know"}
+              </p>
+            )}
 
             <div className="mt-8 grid gap-6 lg:grid-cols-[1.25fr_1fr]">
               <Card className="p-6">
@@ -95,7 +100,7 @@ export default function NewLessonPage() {
                     {source === "topic" ? (
                       <motion.div key="t" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.25 }}>
                         <Label htmlFor="topic">{t("new.topicLabel")}</Label>
-                        <Input id="topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder={t("new.topicPlaceholder")} maxLength={500} className="h-14 text-lg" autoFocus
+                        <Input id="topic" value={topic} onChange={(e) => { setTopic(e.target.value); setPath(null); }} placeholder={t("new.topicPlaceholder")} maxLength={500} className="h-14 text-lg" autoFocus
                           onKeyDown={(e) => e.key === "Enter" && void build()} />
                         <p className="mt-5 text-xs font-medium uppercase tracking-wider text-ink-3">{t("new.suggestions")}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
