@@ -118,16 +118,61 @@ def generate(db: Session, lesson: Lesson) -> list[dict]:
     """New questions for the weakest concepts, grounded in the script the
     learner actually watched. Replaces the previous generated set."""
     import uuid
-    items.sort(key=lambda it: (not it["needs_practice"],))
-    return items
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timezone
+
+    from modules.ai_agent_orchestration.src.schemas.lesson import LessonNode
+    from modules.ai_agent_orchestration.src.schemas.teaching import TeachingSegment
+    from modules.backend.src.services.session_manager import session_manager
+
+    targets = _targets(db, lesson)
+    if not targets:
+        raise PracticeError("Answer at least one question in this lesson first.")
+    questioner = session_manager._ai.orchestrator.questioner
+    plan = {n.get("node_id"): n for n in (lesson.plan_json or {}).get("nodes", [])}
+
+    def make(target):
+        row, level, tag = target
+        node = LessonNode(**{**{"node_id": row.node_id, "concept": row.concept, "depth": row.depth,
+                                "est_minutes": row.est_minutes, "visual_type": row.visual_type,
+                                "checkpoint_question": True}, **plan.get(row.node_id, {})})
+        segment = TeachingSegment(node_id=row.node_id, script_text=row.script_text or "",
+                                  language=lesson.language or "en",
+                                  visual_spec=row.visual_json or {"type": row.visual_type or "diagram", "content": row.concept},
+                                  avatar_cue="neutral", notes=row.notes_json or None)
+        ev = questioner.generate_question(node, segment, difficulty=level)
+        return {"id": "g" + uuid.uuid4().hex[:31], "node_id": row.node_id, "concept": row.concept,
+                "question_text": ev.question_text, "type": ev.type, "options": list(ev.options or []),
+                "expected_concept": ev.expected_concept, "difficulty": level, "target": tag}
+
+    with ThreadPoolExecutor(max_workers=len(targets)) as pool:
+        made = [m for m in pool.map(_safe(make), targets) if m]
+    if not made:
+        raise PracticeError("Couldn't make new questions right now. Try again in a moment.")
+    lesson.practice_extra = {"items": made, "at": datetime.now(timezone.utc).isoformat()}
+    db.flush()
+    return made
 
 
-def grade(db: Session, lesson: Lesson, user_id: str, interaction_id: str, answer: str) -> dict:
-    question: Optional[Interaction] = db.get(Interaction, interaction_id)
-    if question is None or question.lesson_id != lesson.id or question.correct is None:
-        raise PracticeError("That question isn't available for practice.")
-    answer = (answer or "").strip()
-    if not answer:
+def _safe(fn):
+    def run(arg):
+        try:
+            return fn(arg)
+        except Exception:  # one failed question shouldn't sink the others
+            import logging
+            logging.getLogger(__name__).exception("Practice question generation failed")
+            return None
+    return run
+
+
+def check_answer(qtype: str, expected: str, node_id: str, answer: str) -> tuple[bool, str]:
+    """Multiple-choice is checked locally; anything written costs one grading call."""
+    if qtype == "mcq":
+        correct = _norm(answer) == _norm(expected)
+        return correct, "Correct!" if correct else "Not quite."
+    from modules.ai_agent_orchestration.src.schemas.interaction import StudentResponse
+    from modules.backend.src.integrations.container import services
+
         raise PracticeError("Type or pick an answer first.")
 
     if question.question_type == "mcq":
