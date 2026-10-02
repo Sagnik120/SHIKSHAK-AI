@@ -15,6 +15,7 @@ import { Donut, Legend, TimeChart } from "@/components/charts/charts";
 import { BadgeCard, nextBadges } from "@/components/lesson/badges";
 import { PlaneMark } from "@/components/brand/logo";
 import { LoadError } from "@/components/ui/load-error";
+import { LearningPath } from "@/components/lesson/learning-path";
 import { cn, EASE } from "@/lib/utils";
 
 const C = { right: "#7fb08f", wrong: "#e3a39a", minutes: "var(--sky-600)", acc: "var(--marigold-600)", rescued: "var(--sky-500)", stuck: "#e3a39a" };
@@ -27,6 +28,7 @@ export default function ProgressPage() {
     <div className="mx-auto max-w-6xl px-5 py-8 lg:px-10 lg:py-10">
       <h1 className="font-display text-5xl text-ink sm:text-6xl">{t("progress.title")}</h1>
       <p className="mt-2 text-ink-2">{t("progress.sub")}</p>
+      <LearningPath />
       {j.isLoading && <Skeleton className="mt-8 h-80 rounded-[var(--radius)]" />}
       {j.isError && <LoadError className="mt-8" onRetry={() => j.refetch()} />}
       {j.data && (j.data.totals.answers === 0 && j.data.totals.lessons_started === 0 ? (
