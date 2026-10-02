@@ -21,7 +21,7 @@ class MisconceptionClassifier:
             return None
             
         valid_tags = [t["tag"] for t in taxonomy]
-        taxonomy_context = json.dumps(taxonomy, indent=2)
+        taxonomy_context = json.dumps(taxonomy, ensure_ascii=False, separators=(",", ":"))
         
         messages = [
             {
