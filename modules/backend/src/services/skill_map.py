@@ -328,3 +328,58 @@ def route(goal: str, graph: dict, mastered: dict[str, dict]) -> list[dict]:
                   if mastered.get(p, {}).get("state") == "mastered" and mastered[p].get("score") is not None]
         if scored and not s["blocked_by"]:
             score, p = min(scored)
+            recaps.append((s["id"], {
+                "id": p, "title": graph[p]["title"], "track": graph[p]["track"], "state": "recap", "blocked_by": [],
+                "reason": f"Quick recap: {graph[s['id']]['title']} builds on this, and it's your weakest foundation ({round(score * 100)}%).",
+            }))
+    for before, recap in recaps:
+        if all(x["id"] != recap["id"] for x in steps):
+            steps.insert(next(i for i, x in enumerate(steps) if x["id"] == before), recap)
+
+    # The first step whose prerequisites are all mastered (or skipped) is "next".
+    for s in steps:
+        if not s["blocked_by"] or all(b not in {x["title"] for x in steps} for b in s["blocked_by"]):
+            s["next"] = True
+            break
+    return steps
+
+
+def journey(goal: str, graph: dict, mastered: dict[str, dict], steps: list[dict]) -> list[dict]:
+    """The whole path in order: finished steps interleaved with what's left
+    (`steps` = route(), recaps included), each linked to its latest lesson."""
+    known = frozenset(c for c, v in mastered.items() if v.get("state") == "mastered")
+    out, i = [], 0
+    for cid in _ancestors(targets(goal, graph), graph, known):
+        if cid in known:
+            m = mastered[cid]
+            out.append({"id": cid, "title": graph[cid]["title"], "track": graph[cid]["track"], "state": "done",
+                        "score": m.get("score"), "reason": "", "blocked_by": []})
+            continue
+        while i < len(steps):  # route steps for this concept (a recap comes first)
+            st = steps[i]
+            i += 1
+            out.append(st)
+            if st["id"] == cid and st["state"] != "recap":
+                break
+    out.extend(steps[i:])
+    for item in out:
+        m = mastered.get(item["id"], {})
+        item["lesson_id"], item["lesson_status"] = m.get("lesson_id"), m.get("lesson_status")
+    return out
+
+
+def path_context(db: Session, user_id: str, concept: Optional[str], goal: Optional[str]) -> Optional[dict]:
+    """What the planner should know when this lesson is one step on a route."""
+    graph = concepts()
+    if concept not in graph:
+        return None
+    m = mastery(db, user_id, graph)
+    pre = graph[concept]["prereqs"]
+    goal = goal if valid_goal(goal, graph) else concept
+    order = [s["id"] for s in route(goal, graph, m)]
+    after = order[order.index(concept) + 1] if concept in order and order.index(concept) + 1 < len(order) else None
+    return {
+        "concept": graph[concept]["title"],
+        "goal": goal_title(goal, graph),
+        "mastered_prerequisites": [graph[p]["title"] for p in pre if m.get(p, {}).get("state") == "mastered"],
+        "weak_prerequisites": [
