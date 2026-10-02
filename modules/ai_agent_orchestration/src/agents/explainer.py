@@ -13,6 +13,26 @@ SPEAKING_RATE_WPM = 140
 TEACH_TIME_SHARE = 0.7
 MIN_TARGET_WORDS = 100
 MAX_TARGET_WORDS = 600
+GROUNDING_CHAR_BUDGET = 6000
+
+
+def compact_grounding(chunks: List[Any]) -> List[str]:
+    """Whitespace-normalised, de-duplicated chunks within GROUNDING_CHAR_BUDGET."""
+    out, seen, used = [], set(), 0
+    for c in chunks:
+        text = " ".join((c.text if hasattr(c, "text") else str(c)).split())
+        key = text[:200].lower()
+        if not text or key in seen:
+            continue
+        room = GROUNDING_CHAR_BUDGET - used
+        if room <= 200:
+            break
+        text = text[:room]
+        seen.add(key)
+        out.append(text)
+        used += len(text)
+    return out
+
 
 
 def target_words_for(est_minutes: int) -> int:
