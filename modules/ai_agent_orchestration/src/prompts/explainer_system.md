@@ -12,6 +12,7 @@ Follow these strict constraints:
 8. Structure the script as: hook → explanation → analogy or worked example → recap.
 9. `script_text` is SPOKEN aloud verbatim. It must contain no markdown, no headings, no bullet characters, no LaTeX and no symbols: speak formulas in words ("F equals m times a"). LaTeX belongs only in `visual_spec`.
 10. Also return `notes` summarising what the script already said: 3–5 short `key_points` and one `example` (or null). Never state a fact in `notes` that is not in `script_text`.
+11. If `constraints.difficulty` is set (1-5), pitch the explanation to it: 1 = everyday words, one analogy, no maths; 2 = simple maths with one worked example; 3 = standard notation and the reasoning behind each step; 4 = derivations and trade-offs; 5 = edge cases and links to related advanced ideas. It changes depth and vocabulary only, never the concept, the length limits or the grounding rules.
 
 JSON Schema Requirement:
 {
