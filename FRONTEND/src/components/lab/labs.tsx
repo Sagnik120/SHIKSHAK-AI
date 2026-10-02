@@ -218,4 +218,119 @@ const KEY: Record<string, number[]> = {
   bank: [0.4, 0.4, 1, 0], river: [0, 1.6, 0.6, 0], flooded: [0, 1.0, 0, 0], money: [1.6, 0, 0, 0],
 };
 const QUERY_BANK = [1.2, 1.2, 0.3, 0];       // "bank" asks: money-ish or water-ish context?
+
+function weights(tokens: readonly string[]) {
+  const s = tokens.map((t) => KEY[t.toLowerCase()].reduce((acc, k, i) => acc + k * QUERY_BANK[i], 0) / Math.sqrt(4) * 3);
+  const m = Math.max(...s), e = s.map((v) => Math.exp(v - m)), z = e.reduce((a, b) => a + b, 0);
+  return e.map((v) => v / z);
+}
+
+function AttentionLab() {
+  const hi = useHi();
+  const [which, setWhich] = useState<keyof typeof SENTENCES>("river");
+  const [pick, setPick] = useState<string | null>(null);
+  const [shown, setShown] = useState(false);
+  const sent = SENTENCES[which];
+  const ws = weights(sent.tokens);
+  const choose = (k: keyof typeof SENTENCES) => { setWhich(k); setPick(null); setShown(false); };
+  const options = sent.tokens.filter((t) => t !== "bank").map((t) => ({ id: t, label: t }));
+  const verdict = shown && pick ? { right: pick === sent.answer, answer: sent.answer } : null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 text-sm">
+        {(Object.keys(SENTENCES) as Array<keyof typeof SENTENCES>).map((k) => (
+          <button key={k} onClick={() => choose(k)} className={cn("rounded-full border px-3 py-1", which === k ? "border-sky-500 bg-sky-50 text-ink" : "border-line text-ink-2")}>
+            “{SENTENCES[k].tokens.join(" ")}”
+          </button>
+        ))}
+      </div>
+      <Predict
+        question={hi ? "“bank” शब्द किस शब्द पर सबसे ज़्यादा ध्यान देगा?" : "Which word will “bank” pay the most attention to?"}
+        options={options} picked={pick} onPick={(id) => { setPick(id); setShown(true); }} verdict={verdict}
+        explain={hi ? <>“bank” की क्वेरी हर शब्द की की (key) से गुणा होती है; सॉफ़्टमैक्स इन्हें भार बनाता है। संदर्भ वाला शब्द सबसे मेल खाता है, इसलिए एक ही शब्द का अर्थ वाक्य के अनुसार बदलता है।</>
+                    : <>“bank”&apos;s query is dotted with every word&apos;s key and softmax turns the scores into weights. The context word matches best, which is how the same word gets a different meaning in each sentence.</>}
+      />
+      <div className="flex flex-wrap gap-2">
+        {sent.tokens.map((t, i) => (
+          <div key={`${which}-${i}`} className="text-center">
+            <motion.div className="grid h-14 min-w-14 place-items-center rounded-xl border px-3 font-medium text-ink"
+              animate={{ backgroundColor: shown ? `rgba(14,116,144,${0.08 + ws[i] * 0.8})` : "rgba(0,0,0,0)", color: shown && ws[i] > 0.45 ? "#fff" : "var(--ink)" }}
+              style={{ borderColor: t === "bank" ? "var(--marigold-600)" : "var(--line)" }}>{t}</motion.div>
+            <p className="mt-1 font-mono text-xs text-ink-3">{shown ? ws[i].toFixed(2) : "–"}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 4. a single neuron: can one line separate AND / OR / XOR? ─────────── */
+
+const GATES = { AND: [0, 0, 0, 1], OR: [0, 1, 1, 1], XOR: [0, 1, 1, 0] } as const;
+const PTS = [[0, 0], [0, 1], [1, 0], [1, 1]] as const;
+
+function NeuronLab() {
+  const hi = useHi();
+  const [gate, setGate] = useState<keyof typeof GATES>("AND");
+  const [w1, setW1] = useState(1), [w2, setW2] = useState(1), [b, setB] = useState(-0.5);
+  const [pick, setPick] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+  const S = 240, P = 36, X = (v: number) => P + v * (S - 2 * P), Y = (v: number) => S - P - v * (S - 2 * P);
+  const out = PTS.map(([a, c]) => (w1 * a + w2 * c + b > 0 ? 1 : 0));
+  const acc = out.filter((o, i) => o === GATES[gate][i]).length;
+  // boundary w1·x + w2·y + b = 0, clipped to the plot
+  const lo = -0.4, hiX = 1.4;
+  const seg = Math.abs(w2) > 1e-6
+    ? [[lo, -(w1 * lo + b) / w2], [hiX, -(w1 * hiX + b) / w2]]
+    : [[-b / (w1 || 1e-6), lo], [-b / (w1 || 1e-6), hiX]];
+  const truth = gate === "XOR" ? "no" : "yes";
+  const choose = (g: keyof typeof GATES) => { setGate(g); setPick(null); setChecked(false); };
+  const sliders: Array<[string, number, (v: number) => void]> = [["w₁", w1, setW1], ["w₂", w2, setW2], ["b", b, setB]];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 text-sm">
+        {(Object.keys(GATES) as Array<keyof typeof GATES>).map((g) => (
+          <button key={g} onClick={() => choose(g)} className={cn("rounded-full border px-3 py-1 font-mono", gate === g ? "border-sky-500 bg-sky-50 text-ink" : "border-line text-ink-2")}>{g}</button>
+        ))}
+      </div>
+      <Predict
+        question={hi ? `क्या एक न्यूरॉन (एक सीधी रेखा) ${gate} के चारों बिंदु सही बाँट सकता है?` : `Can one neuron (one straight line) get all 4 points of ${gate} right?`}
+        options={[{ id: "yes", label: hi ? "हाँ" : "Yes" }, { id: "no", label: hi ? "नहीं" : "No, impossible" }]}
+        picked={pick} onPick={(id) => { setPick(id); setChecked(true); }} verdict={checked && pick ? { right: pick === truth, answer: truth } : null}
+        explain={gate === "XOR"
+          ? (hi ? <>XOR के बिंदु तिरछे हैं; कोई एक रेखा उन्हें अलग नहीं कर सकती। इसीलिए नेटवर्क में कई परतें (hidden layers) चाहिए।</> : <>XOR&apos;s points sit diagonally; no single line separates them. That&apos;s why neural networks need hidden layers.</>)
+          : (hi ? <>{gate} रैखिक रूप से अलग किया जा सकता है, स्लाइडर से रेखा खिसकाकर 4/4 पाइए।</> : <>{gate} is linearly separable. Drag the sliders until you hit 4/4.</>)} />
+      <div className="grid items-center gap-4 sm:grid-cols-[240px_1fr]">
+        <svg viewBox={`0 0 ${S} ${S}`} className="w-full max-w-[240px] rounded-2xl border border-line bg-surface">
+          <defs><clipPath id="nclip"><rect x={4} y={4} width={S - 8} height={S - 8} rx={12} /></clipPath></defs>
+          <motion.line clipPath="url(#nclip)" animate={{ x1: X(seg[0][0]), y1: Y(seg[0][1]), x2: X(seg[1][0]), y2: Y(seg[1][1]) }} stroke="var(--marigold-600)" strokeWidth={2.5} strokeDasharray="6 4" />
+          {PTS.map(([a, c], i) => {
+            const want = GATES[gate][i], ok = out[i] === want;
+            return (
+              <g key={i}>
+                <motion.circle cx={X(a)} cy={Y(c)} r={14} fill="none" stroke={ok ? "var(--sage)" : "var(--rose)"} strokeWidth={2} animate={{ scale: ok ? 1 : [1, 1.25, 1] }} transition={{ duration: 0.4 }} />
+                <circle cx={X(a)} cy={Y(c)} r={9} fill={want ? "var(--sky-600)" : "var(--surface)"} stroke="var(--sky-600)" strokeWidth={2} />
+                <text x={X(a)} y={Y(c) + 30} textAnchor="middle" fontSize="10" fill="var(--ink-3)">({a},{c})</text>
+              </g>
+            );
+          })}
+        </svg>
+        <div className="space-y-3">
+          {sliders.map(([k, v, set]) => (
+            <label key={k} className="flex items-center gap-3 text-sm text-ink-2">
+              <span className="w-6 font-mono">{k}</span>
+              <input type="range" min={-2} max={2} step={0.1} value={v} onChange={(e) => set(Number(e.target.value))} className="min-w-0 flex-1 accent-[var(--sky-600)]" />
+              <span className="w-10 text-right font-mono text-ink">{v.toFixed(1)}</span>
+            </label>
+          ))}
+          <div className={cn("rounded-xl px-4 py-3 text-sm", acc === 4 ? "bg-sage-100 text-ink" : "bg-paper-2 text-ink-2")}>
+            <span className="font-mono text-lg font-semibold text-ink">{acc}/4</span> {hi ? "सही" : "correct"}
+            <span className="ml-2 font-mono text-xs text-ink-3">fire if {w1.toFixed(1)}·x₁ + {w2.toFixed(1)}·x₂ + {b.toFixed(1)} &gt; 0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
