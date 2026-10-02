@@ -78,8 +78,6 @@ function Empty({ icon, text }: { icon: React.ReactNode; text: string }) {
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-paper-2 [&>svg]:h-5 [&>svg]:w-5">{icon}</span>
       {text}
     </div>
-      {text}
-    </div>
   );
 }
 
