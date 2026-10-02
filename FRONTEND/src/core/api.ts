@@ -9,6 +9,7 @@ import type {
   Dashboard, Lesson, LessonDetail, LessonList, PracticeSet, PracticeResult, User, TokenResponse,
   DocumentInfo, AdminOverview, AdminLive, AdminEscalations, AdminInsights, AdminQuality,
   AdminPipeline, AdminLearners, AdminLearnerDetail, AdminStaff, Analytics, SavedNote, Journey,
+  SkillConcept, SkillMap, Placement, PlacementAnswer, PlacementStep, WhyEntry, ReviewDue, ReviewSet, ReviewResult,
 } from "./types";
 
 export const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000").replace(/\/+$/, "");
@@ -287,6 +288,20 @@ export const api = {
 
   // insights
   dashboard: () => request<Dashboard>("/dashboard"),
+  skillMap: (goal?: string | null) => request<SkillMap>(`/skill-map${goal ? `?goal=${enc(goal)}` : ""}`),
+  setSkillGoal: (goal: string | null) => request<SkillMap>("/skill-map/goal", { method: "PATCH", body: { goal } }),
+  reviewDue: () => request<{ due: ReviewDue[] }>("/spaced-review"),
+  reviewStart: (cid: string) => request<ReviewSet>(`/spaced-review/${enc(cid)}/start`, { method: "POST" }),
+  reviewAnswer: (cid: string, questionId: string, answer: string) =>
+    request<ReviewResult>(`/spaced-review/${enc(cid)}/answer`, { method: "POST", body: { question_id: questionId, answer } }),
+  lessonWhy: (id: string) => request<{ lesson_id: string; entries: WhyEntry[] }>(`/lessons/${enc(id)}/why`),
+  placementNext: (answers: PlacementAnswer[]) =>
+    request<PlacementStep>("/skill-map/placement/next", { method: "POST", body: { answers } }),
+  placementSave: (answers: PlacementAnswer[]) =>
+    request<{ placement: Placement; map: SkillMap }>("/skill-map/placement", { method: "POST", body: { answers } }),
+  placementReset: () => request<SkillMap>("/skill-map/placement", { method: "DELETE" }),
+  addSkillConcept: (topic: string) =>
+    request<SkillConcept & { existing: boolean }>("/skill-map/concepts", { method: "POST", body: { topic } }),
   analytics: () => request<Analytics>("/analytics"),
   journey: () => request<Journey>("/journey"),
 
