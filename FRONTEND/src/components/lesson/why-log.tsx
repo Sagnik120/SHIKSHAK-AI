@@ -53,4 +53,48 @@ function phrase(e: WhyEntry, lang: Lang): { text: string; icon: React.ReactNode;
         : `Rebuilt ${c} from scratch in simpler steps: attempt ${p.attempt ?? 2} on the same idea.` };
     case "adapt_human":
     case "mentor":
+      return { icon: <Hand />, tone: "text-rose bg-rose-100", text: hi ? `${c} पर कई प्रयासों के बाद आपके मेंटर को आपके उत्तरों के साथ सूचित किया।` : `Told your mentor about ${c}, with your answers, after several tries.` };
+    case "escalation_continued":
+      return { icon: <Hand />, tone: "text-ink-2 bg-paper-3", text: hi ? `मेंटर की मदद के बाद ${c} से आगे बढ़े।` : `Continued past ${c} after help from your mentor.` };
+    case "escalation_skipped":
+      return { icon: <SkipForward />, tone: "text-ink-2 bg-paper-3", text: hi ? `${c} को बाद में दोहराने के लिए छोड़ा।` : `Set ${c} aside to review later.` };
+    case "level": {
+      const up = Number(p.to) > Number(p.frm);
+      const why = p.reason === "streak" ? (hi ? "लगातार 2 सही" : "2 right in a row") : p.reason === "miss" ? (hi ? "एक उत्तर चूका" : "a missed answer") : "";
+      return { icon: up ? <ArrowUp /> : <ArrowDown />, tone: up ? "text-sage bg-sage-100" : "text-sky-700 bg-sky-50", text: hi
+        ? `स्तर ${p.frm} → ${p.to}${why ? ` (${why})` : ""}। अगला हिस्सा ${up ? "थोड़ा गहरा" : "आसान"} होगा।`
+        : `Level ${p.frm} → ${p.to}${why ? ` (${why})` : ""}. The next part goes ${up ? "a little deeper" : "simpler"}.` };
+    }
+    default:
+      return null;
+  }
+}
+
+export function WhyLog({ lessonId, live = false, limit, className }: { lessonId: string; live?: boolean; limit?: number; className?: string }) {
+  const { lang } = useI18n();
+  const L: Lang = lang === "hi" ? "hi" : "en";
+  // Live view refreshes while it is open; decisions arrive as the lesson runs.
+  const q = useQuery({ queryKey: ["why", lessonId], queryFn: () => api.lessonWhy(lessonId), refetchInterval: live ? 6000 : false });
+  const rows = (q.data?.entries ?? []).map((e) => ({ e, f: phrase(e, L) })).filter((r) => r.f);
+  const shown = limit ? rows.slice(-limit) : rows;
+
+  if (q.isLoading) return <p className={cn("text-sm text-ink-3", className)}>…</p>;
+  if (!shown.length) {
+    return (
+      <p className={cn("flex items-center gap-2 text-sm text-ink-3", className)}>
+        <Lightbulb className="h-4 w-4" />{L === "hi" ? "जैसे ही शिक्षक आपके लिए कुछ बदलेगा, उसका कारण यहाँ दिखेगा।" : "Whenever the tutor changes something for you, the reason will show up here."}
+      </p>
+    );
+  }
+  return (
+    <ol className={cn("space-y-2", className)}>
+      {shown.map(({ e, f }, i) => (
+        <motion.li key={`${e.kind}-${e.at}-${i}`} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.03, ease: EASE }}
+          className="flex gap-3">
+          <span className={cn("mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full [&>svg]:h-3.5 [&>svg]:w-3.5", f!.tone)}>{f!.icon}</span>
+          <p className="min-w-0 break-words text-sm leading-relaxed text-ink-2 [overflow-wrap:anywhere]">{f!.text}</p>
+        </motion.li>
+      ))}
+    </ol>
+  );
 }
