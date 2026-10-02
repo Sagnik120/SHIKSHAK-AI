@@ -64,6 +64,26 @@ def practice_set(db: Session, lesson: Lesson, user_id: str) -> list[dict]:
         })
     # Wrong in the lesson first, then in lesson order.
     items.sort(key=lambda it: (not it["needs_practice"],))
+    # Fresh targeted questions (Practice Lab) lead the set.
+    extra = []
+    for g in (lesson.practice_extra or {}).get("items") or []:
+        practice = last_practice.get(g["id"])
+        extra.append({
+            "interaction_id": g["id"], "node_id": g["node_id"], "concept": g["concept"],
+            "question_text": g["question_text"], "type": g["type"], "options": list(g.get("options") or []),
+            "your_lesson_answer": None, "lesson_correct": None, "needs_practice": True,
+            "generated": True, "difficulty": g.get("difficulty"), "target": g.get("target"),
+            "last_practice": None if practice is None else {
+                "correct": practice.correct, "answer": practice.answer,
+                "answered_at": practice.answered_at.isoformat(),
+            },
+        })
+    return extra + items
+
+
+GENERATE_MAX = 3
+
+    items.sort(key=lambda it: (not it["needs_practice"],))
     return items
 
 
