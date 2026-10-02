@@ -18,6 +18,8 @@ _SYMBOLS = {
     r"\div": "÷", r"\pm": "±", r"\approx": "≈", r"\neq": "≠",
     r"\leq": "≤", r"\geq": "≥", r"\rightarrow": "→", r"\to": "→",
     r"\infty": "∞", r"\sqrt": "√", r"\int": "∫", r"\partial": "∂",
+    r"\eta": "η", r"\sigma": "σ", r"\epsilon": "ε", r"\varepsilon": "ε", r"\phi": "φ",
+    r"\nabla": "∇", r"\propto": "∝", r"\in": "∈", r"\prod": "∏", r"\Rightarrow": "⇒",
 }
 
 _SUPERSCRIPTS = {"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
@@ -52,6 +54,9 @@ def to_plain_text(raw) -> str:
     if not text:
         return ""
 
+    # Environment wrappers and alignment marks carry no meaning on a board.
+    text = re.sub(r"\\(?:begin|end)\s*\{[^{}]*\}", " ", text)
+    text = text.replace("&", "").replace("\\\\", " ")
     text = re.sub(r"\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}", r"(\1)/(\2)", text)
     # U+20D7 is the combining arrow that turns F into F⃗.
     text = re.sub(r"\\vec\s*\{([^{}]*)\}", "\\1" + "\u20D7", text)
