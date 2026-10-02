@@ -8,6 +8,8 @@ ENV PYTHONUNBUFFERED=1 \
 # ffmpeg for video compositing; the rest are build deps for the ML wheels.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ffmpeg \
+        libfribidi0 \
+        libraqm0 \
         build-essential \
         curl \
     && rm -rf /var/lib/apt/lists/*
