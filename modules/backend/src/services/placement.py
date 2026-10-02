@@ -58,3 +58,41 @@ def _public(i: int, asked: int) -> dict:
 
 
 def step(answers: list[dict]) -> dict:
+    """answers: [{"id": anchor id, "choice": option index}] in the order asked.
+    Binary search over the bank: right -> harder, wrong -> easier."""
+    lo, hi = 0, len(BANK) - 1
+    graded, best = [], -1
+    for a in answers[:MAX_QUESTIONS]:
+        i = _INDEX.get(a.get("id"))
+        if i is None or lo > hi or i != (lo + hi) // 2:
+            raise ValueError("Answers don't match the questions asked.")
+        right = a.get("choice") == _shown(i)[1]
+        graded.append(right)
+        if right:
+            best, lo = max(best, i), i + 1
+        else:
+            hi = i - 1
+    if len(graded) < MAX_QUESTIONS and lo <= hi:
+        return {"done": False, "next": _public((lo + hi) // 2, len(graded))}
+    return {"done": True, "known_upto": BANK[best][0] if best >= 0 else None, "correct": sum(graded), "asked": len(graded)}
+
+
+def result(answers: list[dict], graph: dict) -> dict:
+    """Final placement: every anchor up to the highest one answered right, plus
+    all their prerequisites, counts as known."""
+    from modules.backend.src.services import skill_map
+
+    outcome = step(answers)
+    if not outcome["done"]:
+        raise ValueError("Placement isn't finished yet.")
+    upto = outcome["known_upto"]
+    anchors = [cid for cid, *_ in BANK[: _INDEX[upto] + 1]] if upto else []
+    known = skill_map._ancestors(anchors, graph) if anchors else []
+    share = (_INDEX[upto] + 1) / len(BANK) if upto else 0
+    level = 2 if share < 0.34 else 3 if share < 0.75 else 4
+    return {"known": known, "difficulty": level, "known_upto": upto,
+            "at": datetime.now(timezone.utc).isoformat()}
+
+
+def known_set(placement: Optional[dict]) -> set[str]:
+    return set((placement or {}).get("known") or [])
