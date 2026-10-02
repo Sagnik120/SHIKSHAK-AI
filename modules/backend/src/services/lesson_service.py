@@ -663,7 +663,7 @@ def _longest_run(days: set[date]) -> int:
 # --------------------------------------------------------------------------
 
 def dashboard_summary(db: Session, user: User) -> dict:
-    profile = db.get(LearnerProfileRow, user.id) or refresh_learner_profile(db, user.id)
+    profile = refresh_learner_profile(db, user.id)  # stored row goes stale after new lessons
 
     lessons = db.scalars(
         select(Lesson).where(Lesson.user_id == user.id).order_by(Lesson.updated_at.desc())
@@ -893,7 +893,7 @@ def lesson_detail(db: Session, lesson: Lesson) -> dict:
 
 def analytics(db: Session, user: User) -> dict:
     """Time-series and distribution data for the progress analytics page."""
-    profile = db.get(LearnerProfileRow, user.id) or refresh_learner_profile(db, user.id)
+    profile = refresh_learner_profile(db, user.id)  # stored row goes stale after new lessons
     lessons = db.scalars(
         select(Lesson).where(Lesson.user_id == user.id).order_by(Lesson.created_at.asc())
     ).all()
