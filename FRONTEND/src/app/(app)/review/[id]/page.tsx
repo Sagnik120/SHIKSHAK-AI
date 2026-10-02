@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { labsFor } from "@/components/lab/labs";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Check, ChevronDown, CircleDot, Hand, Loader2, Play, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, CircleDot, FlaskConical, Hand, Loader2, Play, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/core/api";
 import type { LessonDetail, LessonNode, PracticeQuestion, PracticeResult } from "@/core/types";
@@ -73,6 +74,15 @@ export default function ReviewPage() {
           )}
 
           <Tabs<Tab> className="mt-8 max-w-sm" value={tab} onChange={change} items={[{ value: "watch", label: t("review.watch") }, { value: "practice", label: t("review.practice") }]} />
+          <AnimatePresence mode="wait">
+            <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="mt-6">
+              {tab === "watch" ? <Watch l={l} onRelearn={(nid) => act("relearn", nid)} /> : <Practice id={id} />}
+            </motion.div>
+          </AnimatePresence>
+        </>
+      )}
+    </div>
+  );
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="mt-6">
               {tab === "watch" ? <Watch l={l} onRelearn={(nid) => act("relearn", nid)} /> : <Practice id={id} />}
