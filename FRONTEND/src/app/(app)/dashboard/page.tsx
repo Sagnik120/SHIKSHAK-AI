@@ -68,11 +68,6 @@ function Filled({ d }: { d: Dashboard }) {
   const s = d.stats;
   const journey = useQuery({ queryKey: ["journey"], queryFn: api.journey, retry: 1 });
   const stats = [
-function Filled({ d }: { d: Dashboard }) {
-  const { t, n } = useI18n();
-  const s = d.stats;
-  const journey = useQuery({ queryKey: ["journey"], queryFn: api.journey, retry: 1 });
-  const stats = [
     { icon: <BookCheck />, label: t("dash.stat.lessons"), value: s.lessons_completed, tint: "text-sky-700 bg-sky-50" },
     { icon: <Trophy />, label: t("dash.stat.score"), value: s.average_score_pct, suffix: "%", tint: "text-marigold-600 bg-marigold-50" },
     { icon: <Target />, label: t("dash.stat.accuracy"), value: s.accuracy_pct, suffix: "%", tint: "text-sage bg-sage-100" },
@@ -81,33 +76,58 @@ function Filled({ d }: { d: Dashboard }) {
     { icon: <Gauge />, label: t("dash.stat.mastered"), value: s.concepts_mastered, tint: "text-sage bg-sage-100" },
   ];
   return (
-    <div className="mt-8 space-y-6">
+    <div className="space-y-6">
       {d.needs_attention.length > 0 && <Attention items={d.needs_attention} />}
-      {d.resume_lesson && <Resume d={d} />}
 
-      <Stagger className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {stats.map((x) => (
-          <StaggerItem key={x.label}>
-            <Card lift className="h-full p-4">
-              <span className={cn("grid h-9 w-9 place-items-center rounded-xl [&>svg]:h-[18px] [&>svg]:w-[18px]", x.tint)}>{x.icon}</span>
-              <p className="mt-4 font-display text-4xl text-ink"><CountUp to={x.value} suffix={x.suffix} format={(v) => n(v)} /></p>
-              <p className="mt-0.5 text-xs text-ink-3">{x.label}</p>
-            </Card>
-          </StaggerItem>
-        ))}
-      </Stagger>
+      <Card className="overflow-hidden p-0">
+        <Stagger className="grid grid-cols-2 gap-px bg-line/70 sm:grid-cols-3 xl:grid-cols-6">
+          {stats.map((x) => (
+            <StaggerItem key={x.label} className="bg-surface">
+              <div className="flex h-full items-center gap-3 p-4">
+                <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl [&>svg]:h-[18px] [&>svg]:w-[18px]", x.tint)}>{x.icon}</span>
+                <div className="min-w-0">
+                  <p className="font-display text-3xl leading-none text-ink"><CountUp to={x.value} suffix={x.suffix} format={(v) => n(v)} /></p>
+                  <p className="mt-1 truncate text-xs text-ink-3">{x.label}</p>
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Card className="p-5">
-          <div className="mb-2 flex items-center justify-between px-1">
-            <h2 className="font-display text-2xl">{t("dash.recent")}</h2>
-            <Link href="/lessons" className="text-sm text-sky-700 hover:underline">{t("dash.viewAll")}</Link>
-          </div>
-          <div className="divide-y divide-line/70">
-            {d.recent_lessons.slice(0, 6).map((l) => <LessonRow key={l.id} lesson={l} />)}
-          </div>
-        </Card>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="space-y-6">
+          <Card className="p-5">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="font-display text-2xl">{t("dash.recent")}</h2>
+              <Link href="/lessons" className="text-sm text-sky-700 hover:underline">{t("dash.viewAll")}</Link>
+            </div>
+            <div className="divide-y divide-line/70">
+              {d.recent_lessons.slice(0, 6).map((l) => <LessonRow key={l.id} lesson={l} />)}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <h2 className="font-display text-2xl">{t("dash.trend")}</h2>
+            <Trend points={d.score_trend} />
+          </Card>
+          {(d.strong_concepts.length > 0 || d.weak_concepts.length > 0) && (
+            <Card className="grid gap-5 p-5 sm:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold text-sage">{t("dash.strong")}</h3>
+                <div className="mt-3 flex flex-wrap gap-2">{d.strong_concepts.length ? d.strong_concepts.map((c) => <Badge key={c} tone="sage">{c}</Badge>) : <span className="text-sm text-ink-3">—</span>}</div>
+              </div>
+              <div className="sm:border-l sm:border-line/70 sm:pl-5">
+                <h3 className="text-sm font-semibold text-marigold-600">{t("dash.weak")}</h3>
+                <div className="mt-3 flex flex-wrap gap-2">{d.weak_concepts.length ? d.weak_concepts.map((c) => <Badge key={c} tone="marigold">{c}</Badge>) : <span className="text-sm text-ink-3">—</span>}</div>
+              </div>
+            </Card>
+          )}
+        </div>
+        <Card className="p-5 lg:sticky lg:top-6">
+          {journey.data ? <StreakCalendar journey={journey.data} /> : journey.isError ? <LoadError onRetry={() => journey.refetch()} /> : <Skeleton className="h-96 rounded-2xl" />}
+        </Card>
+      </div>
+    </div>
           <Card className="p-5">
             {journey.data ? <StreakCalendar journey={journey.data} /> : journey.isError ? <LoadError onRetry={() => journey.refetch()} /> : <Skeleton className="h-96 rounded-2xl" />}
           </Card>
