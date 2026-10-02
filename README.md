@@ -24,7 +24,7 @@
 
 **🏆 Build Fast with AI Hackathon** · Problem statement: *Personalised AI Tutor for Learning AI*
 
-[🌐 Live demo](https://shikshak-ai-ten.vercel.app/) · [▶️ Demo video](https://drive.google.com/drive/folders/1infdc3RWzBQl95rh4vZ49I8wZBQgEkA3?usp=sharing) · [⚡ Quick start](#-quick-start-tldr) · [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough)
+[🌐 Live demo](https://shikshak-ai-ten.vercel.app/) · [▶️ Demo video](https://drive.google.com/drive/folders/11AFhXK_2RdYCSiwOgmPDFT3HlN1nrAuV?usp=drive_link) · [⚡ Quick start](#-quick-start-tldr) · [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough)
 
 </div>
 
@@ -597,7 +597,7 @@ pnpm lint                     # lint
 
 <div align="center">
 
-**[▶️ Watch the demo video & materials](https://drive.google.com/drive/folders/1infdc3RWzBQl95rh4vZ49I8wZBQgEkA3?usp=sharing)** · **[🌐 Open the live demo](https://shikshak-ai-ten.vercel.app/)**
+**[▶️ Watch the demo video & materials](https://drive.google.com/drive/folders/11AFhXK_2RdYCSiwOgmPDFT3HlN1nrAuV?usp=drive_link)** · **[🌐 Open the live demo](https://shikshak-ai-ten.vercel.app/)**
 
 </div>
 
