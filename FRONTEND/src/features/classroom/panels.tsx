@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Check, CircleDot, Download, Eye, FileText, Hand, Loader2, MessageSquareText, Play, RefreshCw, ScrollText, Sparkles, X } from "lucide-react";
+import { BookOpen, Check, CircleDot, Download, Eye, FileText, Hand, Lightbulb, Loader2, MessageSquareText, Play, RefreshCw, ScrollText, Sparkles, X } from "lucide-react";
+import { WhyLog } from "@/components/lesson/why-log";
 import { toast } from "sonner";
 import { api } from "@/core/api";
 import { useI18n } from "@/providers/i18n";
@@ -17,7 +18,7 @@ import type { ClassroomController, ClassroomState, NodeView } from "./controller
 
 /* ── study panel: Notes / Transcript / Questions / Source ─────────────── */
 
-type Tab = "notes" | "transcript" | "questions" | "source";
+type Tab = "notes" | "transcript" | "questions" | "source" | "why";
 
 export function StudyPanel({ s, lessonId }: { s: ClassroomState; lessonId: string }) {
   const { t, n } = useI18n();
@@ -46,6 +47,7 @@ export function StudyPanel({ s, lessonId }: { s: ClassroomState; lessonId: strin
           { value: "transcript", label: <><ScrollText className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.transcript")}</span></> },
           { value: "questions", label: <><MessageSquareText className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.questions")}</span></>, badge: s.qa.length ? <span className="rounded-full bg-sky-100 px-1.5 text-[0.65rem] text-sky-700">{n(answered)}</span> : undefined },
           { value: "source", label: <><FileText className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.source")}</span></> },
+          { value: "why", label: <><Lightbulb className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.why")}</span></> },
         ]} />
       </div>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-5" data-lenis-prevent>
@@ -57,6 +59,7 @@ export function StudyPanel({ s, lessonId }: { s: ClassroomState; lessonId: strin
               : <Empty icon={<ScrollText />} text={t("class.noNotes")} />)}
             {tab === "questions" && <QuestionsTab s={s} />}
             {tab === "source" && <SourceTab s={s} />}
+            {tab === "why" && <WhyLog lessonId={lessonId} live />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -73,6 +76,8 @@ function Empty({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="grid place-items-center gap-3 py-14 text-center text-sm text-ink-3">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-paper-2 [&>svg]:h-5 [&>svg]:w-5">{icon}</span>
+      {text}
+    </div>
       {text}
     </div>
   );
