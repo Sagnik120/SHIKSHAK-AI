@@ -9,6 +9,7 @@ from typing import Optional
 from modules.rag.src.embedding.base import BaseEmbeddingAdapter
 from modules.rag.src.embedding.bge_m3 import BGEM3EmbeddingAdapter
 from modules.rag.src.embedding.e5_bm25 import E5BM25EmbeddingAdapter
+from modules.rag.src.embedding.lexical import LexicalEmbeddingAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,9 @@ def get_embedding_adapter(
     if _DEFAULT_ADAPTER is not None:
         return _DEFAULT_ADAPTER
 
-    if model_type.lower() == "e5":
+    if model_type.lower() == "lexical":
+        _DEFAULT_ADAPTER = LexicalEmbeddingAdapter()
+    elif model_type.lower() == "e5":
         _DEFAULT_ADAPTER = (
             E5BM25EmbeddingAdapter(model_name=model_name, device=device)
             if model_name

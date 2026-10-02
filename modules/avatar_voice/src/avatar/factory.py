@@ -24,6 +24,10 @@ class AvatarFactory:
             - 'tier1' / 'viseme': Strictly Tier 1 2D procedural visemes.
             - 'tier2' / 'musetalk': Strictly Tier 2 neural MuseTalk (errors if prerequisites missing).
         """
+        if os.getenv("VIDEO_MODE", "full").strip().lower() == "lite":
+            from modules.avatar_voice.src.avatar.null_avatar import NullAvatarAdapter
+            return NullAvatarAdapter(output_dir=output_dir)
+
         engine_key = (engine or "auto").strip().lower()
 
         if engine_key in ("tier1", "viseme", "procedural"):

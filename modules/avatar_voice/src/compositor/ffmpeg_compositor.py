@@ -182,7 +182,10 @@ class FFmpegCompositor:
             duration_sec = avatar_result.duration_sec or 3.0
 
         ffmpeg_success = False
-        if self.ffmpeg_bin:
+        # VIDEO_MODE=lite: voice + slide only, low-res, 1 thread. The full 1080p
+        # composition needs ~1.5 GB / many CPU-seconds; free hosts have 512 MB.
+        lite = os.getenv("VIDEO_MODE", "full").strip().lower() == "lite"
+        if self.ffmpeg_bin and not lite:
             try:
                 ffmpeg_success = self._compose_with_ffmpeg(
                     output_mp4=output_mp4,
@@ -194,7 +197,7 @@ class FFmpegCompositor:
             except Exception as e:
                 logger.warning(f"FFmpeg composition encountered error: {e}. Using fallback compositor.")
                 ffmpeg_success = False
-        else:
+        elif not self.ffmpeg_bin:
             logger.warning(
                 "FFmpeg binary not detected on PATH or imageio-ffmpeg. Operating in Pillow preview fallback mode."
             )
@@ -209,18 +212,22 @@ class FFmpegCompositor:
                 )
                 simple_cmd = [
                     self.ffmpeg_bin, "-y",
+                ] + (["-threads", "1", "-filter_threads", "1"] if lite else []) + [
                     "-loop", "1",
                     "-t", str(duration_sec),
                     "-i", visual_result.image_path,
                 ] + audio_input + [
                     "-c:v", "libx264",
-                    "-preset", "veryfast", "-crf", "20",
+                    "-preset", "ultrafast" if lite else "veryfast", "-crf", "28" if lite else "20",
                     "-tune", "stillimage",
                     "-pix_fmt", "yuv420p",
+                ] + (["-vf", "scale=960:-2", "-r", "2", "-threads", "1", "-b:a", "64k"] if lite else []) + [
                     "-shortest",
                     output_mp4,
                 ]
-                res_simple = subprocess.run(simple_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+                res_simple = subprocess.run(
+                    simple_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=180 if lite else 30
+                )
                 ffmpeg_success = (
                     res_simple.returncode == 0
                     and os.path.exists(output_mp4)
