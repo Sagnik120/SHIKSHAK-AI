@@ -173,24 +173,23 @@ def check_answer(qtype: str, expected: str, node_id: str, answer: str) -> tuple[
     from modules.ai_agent_orchestration.src.schemas.interaction import StudentResponse
     from modules.backend.src.integrations.container import services
 
+    result = services["ml_core_service"].evaluator.evaluate(
+        StudentResponse(node_id=node_id, raw_answer=answer, response_type=qtype, response_time_sec=0.0),
+        expected,
+    )
+    return bool(result.correct), result.feedback_text or ""
+
+
+def grade(db: Session, lesson: Lesson, user_id: str, interaction_id: str, answer: str) -> dict:
+    question = _generated(lesson, interaction_id) or db.get(Interaction, interaction_id)
+    if question is None or question.lesson_id != lesson.id or question.correct is None:
+        raise PracticeError("That question isn't available for practice.")
+    answer = (answer or "").strip()
+    if not answer:
         raise PracticeError("Type or pick an answer first.")
 
-    if question.question_type == "mcq":
-        correct = _norm(answer) == _norm(question.expected_concept)
-        feedback = "Correct!" if correct else "Not quite."
-        model_answer = question.expected_concept
-    else:
-        from modules.ai_agent_orchestration.src.schemas.interaction import StudentResponse
-        from modules.backend.src.integrations.container import services
-
-        evaluator = services["ml_core_service"].evaluator
-        result = evaluator.evaluate(
-            StudentResponse(node_id=question.node_id, raw_answer=answer,
-                            response_type=question.question_type, response_time_sec=0.0),
-            question.expected_concept,
-        )
-        correct, feedback = bool(result.correct), result.feedback_text or ""
-        model_answer = question.expected_concept
+    correct, feedback = check_answer(question.question_type, question.expected_concept, question.node_id, answer)
+    model_answer = question.expected_concept
 
     db.add(PracticeAttempt(user_id=user_id, lesson_id=lesson.id, interaction_id=question.id,
                            answer=answer[:4000], correct=correct, feedback_text=feedback))
