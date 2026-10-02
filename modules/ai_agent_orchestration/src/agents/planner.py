@@ -20,7 +20,7 @@ class PlannerAgent(BaseAgent):
 
         user_content: dict[str, Any] = {
             "source_type": source_type,
-            "constraints": constraints.model_dump(),
+            "constraints": constraints.model_dump(exclude_none=True),
         }
 
         if topic:
@@ -44,14 +44,14 @@ class PlannerAgent(BaseAgent):
 
         if learner_profile:
             user_content["learner_profile"] = (
-                learner_profile.model_dump()
+                learner_profile.model_dump(exclude_none=True)
                 if hasattr(learner_profile, "model_dump")
                 else learner_profile
             )
 
         user_prompt = (
             "Please generate a lesson plan based on the following inputs:\n"
-            f"{json.dumps(user_content, indent=2, ensure_ascii=False)}"
+            f"{self.to_prompt_json(user_content)}"
         )
 
         return self.call_llm_json(system_prompt, user_prompt, LessonPlan, max_retries=2)
