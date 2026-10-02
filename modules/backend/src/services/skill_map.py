@@ -483,3 +483,12 @@ def _place_with_llm(topic: str, graph: dict) -> Optional[dict]:
     except NotAITopic:
         raise
     except Exception as exc:  # offline, mock adapter, malformed JSON
+        logger.info("Skill map LLM placement unavailable (%s); using heuristic.", exc)
+        return None
+
+
+def _place_heuristic(topic: str, graph: dict) -> dict:
+    near = match_concept(topic, graph)
+    if near:
+        return {"title": topic, "track": graph[near]["track"], "prereqs": [near]}
+    return {"title": topic, "track": "frontier", "prereqs": ["transformer"]}
