@@ -231,13 +231,13 @@ function Escalations() {
   const { t, n } = useI18n();
   const [status, setStatus] = useState<string>("open");
   const q = useQuery({ queryKey: ["admin", "esc", status], queryFn: () => api.admin.escalations(status === "all" ? undefined : status), refetchInterval: 10000 });
-  const statuses = ["open", "continued", "resolved", "skipped", "all"];
+  const statuses = ["open", "continued", "resolved", "all"];
   return (
     <div>
       <div className="flex flex-wrap gap-2">
         {statuses.map((s) => (
           <button key={s} onClick={() => setStatus(s)} className={cn("rounded-full border px-3 py-1 text-sm", status === s ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink-2")}>
-            {s === "all" ? t("admin.all") : t(`admin.esc.${s}` as MessageKey)}{q.data?.counts?.[s] != null && <span className="ml-1.5 opacity-70">{n(q.data.counts[s])}</span>}
+            {s === "all" ? t("admin.all") : t(`admin.esc.${s}` as MessageKey)}{q.data?.counts?.[s] != null && q.data.counts[s] > 0 && <span className="ml-1.5 opacity-70">{n(q.data.counts[s])}</span>}
           </button>
         ))}
       </div>
@@ -246,14 +246,15 @@ function Escalations() {
       ) : (
         <div className="mt-4 space-y-3">
           {q.data.escalations.map((e) => (
-            <Card key={e.id} className={cn("p-5", e.status === "open" && "border-marigold-200")}>
+            <Card key={e.id} className={cn("p-5", e.needs_mentor && "border-marigold-200")}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-medium text-ink">{e.learner} <span className="text-sm font-normal text-ink-3">· {e.learner_email}</span></p>
                   <p className="text-sm text-ink-2">{e.lesson_title} → <span className="font-medium">{e.concept}</span></p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={e.status === "open" ? "marigold" : e.status === "resolved" ? "sage" : "neutral"} dot>{t(`admin.esc.${e.status}` as MessageKey)}</Badge>
+                  <Badge tone={e.needs_mentor ? "marigold" : e.status === "resolved" ? "sage" : "neutral"} dot>{t(`admin.esc.${e.needs_mentor ? "open" : e.status}` as MessageKey)}</Badge>
+                  {e.learner_moved_on && e.needs_mentor && <Badge tone="neutral">{t("admin.movedOn")}</Badge>}
                   <Badge tone={e.mentor_notified ? "sky" : "rose"}>{e.mentor_notified ? <Mail className="h-3 w-3" /> : <MailX className="h-3 w-3" />}{t(e.mentor_notified ? "admin.mentorEmailed" : "admin.noMentor")}</Badge>
                 </div>
               </div>
@@ -386,6 +387,54 @@ function Pipeline() {
 }
 
 function Learners() {
+  const { t } = useI18n();
+  const [view, setView] = useState<"learners" | "staff">("learners");
+  return (
+    <div>
+      <div className="mb-4 flex gap-2">
+        {(["learners", "staff"] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} className={cn("rounded-full border px-3 py-1 text-sm", view === v ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink-2")}>
+            {t(v === "learners" ? "admin.learners" : "admin.staffList")}
+          </button>
+        ))}
+      </div>
+      {view === "learners" ? <LearnerList /> : <StaffList />}
+    </div>
+  );
+}
+
+function StaffList() {
+  const { t, lang } = useI18n();
+  const [search, setSearch] = useState("");
+  const term = useDeferredValue(search.trim());
+  const q = useQuery({ queryKey: ["admin", "staff", term], queryFn: () => api.admin.staff(term || undefined) });
+  const fmt = new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return (
+    <div>
+      <GlassSearch value={search} onChange={setSearch} placeholder={t("admin.searchStaff")} />
+      <Card className="mt-4 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead className="bg-paper-2 text-left text-xs uppercase tracking-wider text-ink-3">
+              <tr><th className="px-4 py-3">{t("admin.staffList")}</th><th className="px-4 py-3">{t("staff.role")}</th><th className="px-4 py-3">{t("admin.joined")}</th></tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {(q.data?.staff ?? []).map((s) => (
+                <tr key={s.id}>
+                  <td className="px-4 py-3"><div className="flex items-center gap-3"><Avatar user={s} size={34} /><div><p className="font-medium">{s.full_name}</p><p className="text-xs text-ink-3">{s.email}</p></div></div></td>
+                  <td className="px-4 py-3"><Badge tone={s.role === "admin" ? "sky" : "sage"}>{t(s.role === "admin" ? "staff.admin" : "staff.teacher")}</Badge></td>
+                  <td className="px-4 py-3 text-ink-3">{fmt.format(new Date(s.created_at))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function LearnerList() {
   const { t, n, lang } = useI18n();
   const [search, setSearch] = useState("");
   const term = useDeferredValue(search.trim());

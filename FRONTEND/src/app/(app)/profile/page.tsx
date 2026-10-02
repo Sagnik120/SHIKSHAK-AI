@@ -108,7 +108,7 @@ function PhotoSection({ user }: { user: User }) {
   const [over, setOver] = useState(false);
   const staff = isStaff(user);
   const journey = useQuery({ queryKey: ["journey"], queryFn: api.journey, enabled: !staff });
-  const j = journey.data;
+  const j = staff ? undefined : journey.data; // never show a cached learner journey on a staff profile
   const latest = (j?.badges ?? []).filter((b) => b.earned).sort((a, b) => (b.earned_at ?? "").localeCompare(a.earned_at ?? "")).slice(0, 5);
 
   const upload = async (file?: File) => {
