@@ -138,8 +138,6 @@ export class ClassroomController {
   getSnapshot = () => this.state;
   private set(patch: Partial<ClassroomState>) {
     if (this.disposed) return;
-  private set(patch: Partial<ClassroomState>) {
-    if (this.disposed) return;
     this.state = { ...this.state, ...patch };
     this.listeners.forEach((l) => l());
   }
@@ -185,6 +183,7 @@ export class ClassroomController {
 
   private applyLesson(lesson: LessonDetail) {
     this.set({
+      difficulty: lesson.difficulty ?? null,
       title: lesson.title,
       isDocument: lesson.source === "document",
       nodes: lesson.nodes.map((n) => ({ node_id: n.node_id, concept: n.concept, status: n.status, attempts: n.attempts, video_url: n.video_url })),
@@ -544,6 +543,11 @@ export class ClassroomController {
     answer_rejected: (p: Payload) => {
       this.toast("class.emptyAnswer", "warning", p.reason);
       this.set({ grading: false });
+    },
+    difficulty_changed: (p: Payload) => {
+      const up = Number(p.to) > Number(p.from);
+      this.set({ difficulty: Number(p.to) });
+      this.toast(up ? "class.levelUp" : "class.levelDown", up ? "success" : "info");
     },
     citation_updated: (p: Payload) => {
       this.set({ citation: p.excerpt ? (p as CitationView) : { none: true } });
