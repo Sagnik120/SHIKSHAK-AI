@@ -353,3 +353,43 @@ export interface Journey {
   badges: Badge[];
   months: Array<{ month: string; active_days: number; earned: boolean; needed: number }>;
 }
+
+
+export interface SkillConcept {
+  id: string;
+  title: string;
+  track: string;
+  prereqs: string[];
+  custom: boolean;
+  mastery?: { score: number | null; attempts: number; state: "mastered" | "practice" | "started" } | null;
+}
+export interface SkillStep {
+  id: string; title: string; track: string;
+  state: "new" | "practice" | "started" | "recap";
+  reason: string; blocked_by: string[]; next?: boolean;
+}
+export type JourneyStep = Omit<SkillStep, "state"> & {
+  state: SkillStep["state"] | "done";
+  score?: number | null;
+  lesson_id?: string | null;
+  lesson_status?: string | null;
+  review_due?: boolean;
+};
+export interface Placement { known: string[]; difficulty: number; known_upto: string | null; at: string }
+export interface PlacementAnswer { id: string; choice: number }
+export type PlacementStep =
+  | { done: false; next: { id: string; question: string; options: string[]; number: number; of: number } }
+  | { done: true; known_upto: string | null; correct: number; asked: number };
+export interface SkillMap {
+  placement: Placement | null;
+  tracks: Array<{ id: string; title: string }>;
+  concepts: SkillConcept[];
+  goal: string | null;
+  goal_title: string | null;
+  route: SkillStep[];
+  journey: JourneyStep[];
+  scope_total: number;
+  scope_done: number;
+  mastered_count: number;
+}
+
