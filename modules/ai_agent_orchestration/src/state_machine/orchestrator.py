@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Optional, Tuple
 from modules.ai_agent_orchestration.src.state_machine.states import TeacherState
 from modules.ai_agent_orchestration.src.state_machine.session_state import SessionState
 from modules.ai_agent_orchestration.src.state_machine.transitions import is_valid_transition
@@ -278,7 +278,9 @@ class TeacherOrchestrator:
         elif current_state == TeacherState.QUESTION:
             node = session.lesson_plan.nodes[session.current_node_index]
             recent_segment = inputs.get("segment") or getattr(session, "recent_segment", None)
-            event = self.questioner.generate_question(node, recent_segment)
+            event = self.questioner.generate_question(
+                node, recent_segment, difficulty=getattr(session.constraints, "difficulty", None)
+            )
             session.recent_question = event
             tracer.emit(
                 QUESTION_GENERATED,
