@@ -138,3 +138,73 @@ def _save_custom(items: list[dict]) -> None:
     _CUSTOM_PATH.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=_CUSTOM_PATH.parent, suffix=".json")
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        json.dump(items, fh, ensure_ascii=False, indent=1)
+    os.replace(tmp, _CUSTOM_PATH)  # atomic: a crash never leaves half a file
+
+
+def concepts() -> dict[str, dict]:
+    out = {
+        cid: {"id": cid, "title": title, "track": track, "prereqs": list(pre), "keywords": list(kw), "custom": False}
+        for cid, title, track, pre, kw in _CORE
+    }
+    for c in _load_custom():
+        if c["id"] not in out:
+            pre = [p for p in c.get("prereqs", []) if p in out]
+            out[c["id"]] = {
+                "id": c["id"], "title": c.get("title") or c["id"], "track": c.get("track") if c.get("track") in _TRACK_IDS else "frontier",
+                "prereqs": pre, "keywords": c.get("keywords") or [c.get("title", "").lower()], "custom": True,
+                "summary": c.get("summary", ""),
+            }
+    return out
+
+
+def match_concept(text: str, graph: Optional[dict] = None) -> Optional[str]:
+    """Best concept for a lesson/node title: the longest keyword it contains."""
+    graph = graph or concepts()
+    low = f" {(text or '').lower()} "
+    best, best_len = None, 0
+    for cid, c in graph.items():
+        for kw in c["keywords"] + [c["title"].lower()]:
+            kw = kw.strip().lower()
+            # whole-word-ish match so "gan" doesn't fire inside "organ"
+            if kw and len(kw) > best_len and re.search(rf"(?<![a-z]){re.escape(kw)}", low):
+                best, best_len = cid, len(kw)
+    return best
+
+
+def mastery(db: Session, user_id: str, graph: dict) -> dict[str, dict]:
+    """Per-concept mastery from the learner's graded lesson nodes (best score wins)."""
+    from modules.backend.src.services.lesson_service import MASTERY_THRESHOLD
+
+    rows = db.execute(
+        select(LessonNodeRow.concept, LessonNodeRow.mastery_score, LessonNodeRow.attempts, Lesson.title, Lesson.topic,
+               Lesson.skill_concept_id, Lesson.id, Lesson.status, Lesson.updated_at)
+        .join(Lesson, Lesson.id == LessonNodeRow.lesson_id)
+        .where(Lesson.user_id == user_id)
+    ).all()
+    out: dict[str, dict] = {}
+    from modules.backend.src.db.models import User
+    from modules.backend.src.services.placement import known_set
+
+    user = db.get(User, user_id)
+    placed = known_set(user.placement_json if user else None)
+    for concept, score, attempts, title, topic, tagged, lesson_id, lesson_status, updated in rows:
+        # A lesson started from the map knows its concept; only plain lessons
+        # are matched by keywords (which also makes Hindi lessons count).
+        cid = tagged if tagged in graph else match_concept(concept, graph) or match_concept(f"{title} {topic or ''}", graph)
+        if not cid:
+            continue
+        cur = out.setdefault(cid, {"score": None, "attempts": 0, "lesson_id": None, "lesson_status": None, "_at": None})
+        cur["attempts"] += attempts or 0
+        if updated is not None and (cur["_at"] is None or updated > cur["_at"]):
+            cur.update(lesson_id=lesson_id, lesson_status=lesson_status, _at=updated)  # latest lesson on it
+        if attempts:
+            cur["score"] = max(cur["score"] or 0.0, float(score or 0.0))
+    for cid, m in out.items():
+        at = m.pop("_at", None)
+        m["learned_at"] = at.isoformat() if at is not None else None
+        s = m["score"]
+        m["state"] = "mastered" if s is not None and s >= MASTERY_THRESHOLD else "practice" if s is not None else "started"
+    # A failed spaced review reopens a mastered concept until a newer lesson masters it again.
+    from modules.backend.src.services.review_service import lapsed_since
+
