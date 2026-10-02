@@ -383,3 +383,48 @@ def path_context(db: Session, user_id: str, concept: Optional[str], goal: Option
         "goal": goal_title(goal, graph),
         "mastered_prerequisites": [graph[p]["title"] for p in pre if m.get(p, {}).get("state") == "mastered"],
         "weak_prerequisites": [
+            {"concept": graph[p]["title"], "percent": round((m[p]["score"] or 0) * 100)}
+            for p in pre if m.get(p, {}).get("state") == "practice"
+        ],
+        "not_yet_learned": [graph[p]["title"] for p in pre if p not in m],
+        "next_on_path": graph[after]["title"] if after else None,
+        "previous_attempt_percent": round(m[concept]["score"] * 100) if m.get(concept, {}).get("score") is not None else None,
+    }
+
+
+def _mark_due(items: list[dict], db: Session, user) -> list[dict]:
+    """Flag finished steps that are due for a spaced review."""
+    try:
+        from modules.backend.src.services.review_service import due
+
+        ids = {d["id"] for d in due(db, user)} if user else set()
+    except Exception:
+        ids = set()
+    for it in items:
+        it["review_due"] = it["state"] == "done" and it["id"] in ids
+    return items
+
+
+def snapshot(db: Session, user_id: str, goal: Optional[str]) -> dict:
+    graph = concepts()
+    m = mastery(db, user_id, graph)
+    goal = goal if valid_goal(goal, graph) else None
+    steps = route(goal, graph, m) if goal else []
+    scope = set(_ancestors(targets(goal, graph), graph)) if goal else set()
+    from modules.backend.src.db.models import User
+
+    user = db.get(User, user_id)
+    return {
+        "placement": (user.placement_json if user else None),
+        "tracks": [{"id": t, "title": title} for t, title in TRACKS],
+        "concepts": [
+            {k: c[k] for k in ("id", "title", "track", "prereqs", "custom")} | {"mastery": m.get(cid)}
+            for cid, c in graph.items()
+        ],
+        "goal": goal,
+        "goal_title": goal_title(goal, graph) if goal else None,
+        "route": steps,
+        "journey": _mark_due(journey(goal, graph, m, [dict(x) for x in steps]), db, user) if goal else [],
+        # progress toward the goal: concepts in its full scope, and how many are mastered
+        "scope_total": len(scope),
+        "scope_done": sum(1 for c in scope if m.get(c, {}).get("state") == "mastered"),
