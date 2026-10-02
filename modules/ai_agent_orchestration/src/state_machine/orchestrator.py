@@ -61,18 +61,35 @@ class TeacherOrchestrator:
         """
         import re
 
-        sentences = [s for s in re.split(r"(?<=[.!?])\s+", script.strip()) if s]
-        ends, total = [], 0
-        for sentence in sentences:
-            total += len(sentence.split())
-            ends.append(total)
-        if total < 40 or len(ends) < 2:
+        def boundaries(pattern: str) -> list:
+            out, total = [], 0
+            for part in (p for p in re.split(pattern, script.strip()) if p):
+                total += len(part.split())
+                out.append(total)
+            return out
+
+        # Hindi ends sentences with the danda (।/॥), not a full stop; without
+        # it a Hindi script looked like one sentence and got a single question.
+        ends = boundaries(r"(?<=[.!?।॥])\s+")
+        total = ends[-1] if ends else 0
+        if total < 40 or len(ends) < 2 and total < 80:
             return [total] if total else []
         count = max(1, min(cls.MAX_CHECKPOINTS, round(total / cls.WORDS_PER_CHECKPOINT)))
+
+        # Never in the opening or closing stretch: a pause after "Hello!" asks
+        # about nothing yet. Fall back to clause breaks, then even spacing,
+        # when sentences are too long to give enough pause points.
+        lo, hi = total * 0.2, total * 0.92
+        candidates = [e for e in ends[:-1] if lo <= e <= hi]
+        if len(candidates) < count:
+            candidates = sorted(set(candidates) | {e for e in boundaries(r"(?<=[,;:])\s+")[:-1] if lo <= e <= hi})
+        if len(candidates) < count:
+            candidates = sorted(set(candidates) | {round(total * i / (count + 1)) for i in range(1, count + 1)})
+
         positions = []
         for i in range(1, count + 1):
             target = total * i / (count + 1)
-            best = min(ends[:-1], key=lambda e: abs(e - target))
+            best = min(candidates, key=lambda e: abs(e - target))
             if best not in positions:
                 positions.append(best)
         return sorted(positions)
