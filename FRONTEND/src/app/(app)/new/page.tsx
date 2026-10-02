@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, BookOpen, CheckCircle2, FileText, PauseCircle, Pencil, Sparkles, UploadCloud, X } from "lucide-react";
@@ -14,7 +14,7 @@ import type { MessageKey } from "@/core/i18n";
 import { Button, type ButtonStatus } from "@/components/ui/button";
 import { Badge, Card, Input, Label, Tabs } from "@/components/ui/primitives";
 import { GlassSlider } from "@/components/ui/glass-slider";
-import { Shimmer } from "@/components/motion/reveal";
+import { PlanBuilding, UploadProgress } from "@/components/lesson/processing";
 import { errText } from "@/components/auth/auth-kit";
 import { cn, EASE } from "@/lib/utils";
 
@@ -38,6 +38,13 @@ export default function NewLessonPage() {
   const [style, setStyle] = useState<string | null>(null);
   const [status, setStatus] = useState<ButtonStatus>("idle");
   const [plan, setPlan] = useState<{ id: string; nodes: PlanNode[] } | null>(null);
+  // Prefill from the learning path (/new?topic=…&level=…).
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const tp = p.get("topic"), lv = p.get("level");
+    if (tp) { setSource("topic"); setTopic(tp); }
+    if (lv && (LEVELS as readonly string[]).includes(lv)) setLevel(lv);
+  }, []);
 
   const ready = source === "topic" ? topic.trim().length >= 2 : !!doc;
 
@@ -127,9 +134,12 @@ export default function NewLessonPage() {
               </Card>
             </div>
 
-            <div className="mt-6 flex flex-col items-end gap-2">
+            <div className="mt-6 flex flex-col items-end gap-4">
+              {status === "loading" && (
+                <PlanBuilding source={source} label={source === "doc" ? doc?.filename ?? "" : topic.trim()} terms={source === "doc" ? doc?.key_terms : []}
+                  level={t(`auth.level${level[0].toUpperCase()}${level.slice(1)}` as MessageKey).toLowerCase()} minutes={budget} />
+              )}
               <Button size="lg" onClick={build} status={status} loadingLabel={t("new.planning")} disabled={!ready} icon={<ArrowRight className="h-4 w-4" />}>{t("new.plan")}</Button>
-              {status === "loading" && <Shimmer className="text-sm">{t("new.planSteps")}</Shimmer>}
             </div>
           </motion.div>
         ) : (
@@ -145,10 +155,12 @@ function DocPicker({ doc, onDoc }: { doc: DocumentInfo | null; onDoc: (d: Docume
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [pct, setPct] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const docs = useQuery({ queryKey: ["documents"], queryFn: api.listDocuments });
 
   const upload = async (file?: File) => {
     if (!file) return;
+    setFile(file);
     setPct(0);
     try {
       const d = await api.uploadDocument(file, setPct);
@@ -181,6 +193,8 @@ function DocPicker({ doc, onDoc }: { doc: DocumentInfo | null; onDoc: (d: Docume
       </div>
     );
   }
+
+  if (pct !== null && file) return <UploadProgress file={file} pct={pct} />;
 
   return (
     <div>
