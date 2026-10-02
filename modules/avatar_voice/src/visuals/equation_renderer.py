@@ -4,6 +4,7 @@ Renders LaTeX math formulas and equations to 1344x1080 canvas using Matplotlib m
 with font auto-scaling and broken-syntax fallback.
 """
 
+import re
 import os
 import uuid
 from typing import Any, Dict, List, Union
@@ -11,6 +12,19 @@ from PIL import Image, ImageDraw
 from modules.avatar_voice.src.models import VisualRenderResult
 from modules.avatar_voice.src.visuals.base import BaseRenderer, THEME
 from modules.avatar_voice.src.visuals.latex_sanitizer import sanitize_latex, to_plain_text
+
+
+def _mathtext_ok(expr: str) -> bool:
+    """True if matplotlib can typeset it. Non-Latin script (e.g. Hindi) inside
+    math mode draws as boxes, so that counts as not typesettable too."""
+    if re.search(r"[^\x00-\x7F°±×÷·√∞≈≠≤≥→αβγδθλμπρσωΔΣΩ]", expr):
+        return False
+    try:
+        from matplotlib.mathtext import MathTextParser
+        MathTextParser("path").parse(expr if expr.startswith("$") else f"${expr}$")
+        return True
+    except Exception:
+        return False
 
 
 class EquationRenderer(BaseRenderer):
@@ -95,6 +109,8 @@ class EquationRenderer(BaseRenderer):
             import matplotlib
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
+            from modules.avatar_voice.src.visuals.base import use_board_font_in_matplotlib
+            use_board_font_in_matplotlib()
 
             fig = plt.figure(figsize=(13.44, 10.80), dpi=100)
             fig.patch.set_facecolor("#0f172a")
@@ -131,7 +147,11 @@ class EquationRenderer(BaseRenderer):
                 # Strip redundant 'Step X:' prefix if the user included it, since we add it ourselves
                 formatted = re.sub(r'^Step\s*\d+\s*:\s*', '', formatted, flags=re.IGNORECASE)
                 
-                if not formatted.startswith("$"):
+                if not _mathtext_ok(formatted):
+                    # One unparseable step used to sink the whole board into
+                    # the raw-text fallback; show just this step as Unicode.
+                    formatted = to_plain_text(formatted) or formatted
+                elif not formatted.startswith("$"):
                     # Preserve spaces between English words/punctuation before wrapping in math mode
                     formatted = re.sub(r'([a-zA-Z0-9.,;:!\]})])\s+([a-zA-Z0-9(\[{])', r'\1\\ \2', formatted)
                     formatted = f"${formatted}$"
@@ -203,7 +223,7 @@ class EquationRenderer(BaseRenderer):
 
             draw.rounded_rectangle([80, y_pos, self.width - 80, y_pos + 70], radius=8, fill=card_fill, outline=border_color, width=2 if is_active else 1)
             draw.text((110, y_pos + 35), f"Step {idx + 1}", fill=THEME["accent_amber"] if is_active else THEME["text_muted"], font=font_tag, anchor="lm")
-            draw.text((220, y_pos + 35), step_text, fill=THEME["accent_cyan"] if is_active else THEME["text_muted"], font=font_active if is_active else font_past, anchor="lm")
+            draw.text((220, y_pos + 35), to_plain_text(step_text) or step_text, fill=THEME["accent_cyan"] if is_active else THEME["text_muted"], font=font_active if is_active else font_past, anchor="lm")
             y_pos += 90
 
         img.save(output_path, "PNG")
@@ -215,6 +235,8 @@ class EquationRenderer(BaseRenderer):
             import matplotlib
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
+            from modules.avatar_voice.src.visuals.base import use_board_font_in_matplotlib
+            use_board_font_in_matplotlib()
 
             fig = plt.figure(figsize=(13.44, 10.80), dpi=100)
             fig.patch.set_facecolor("#0f172a")
@@ -238,6 +260,8 @@ class EquationRenderer(BaseRenderer):
             )
 
             formatted_latex = latex_str
+            if not _mathtext_ok(formatted_latex):
+                raise ValueError("not typesettable")  # handled by the Unicode fallback below
             if not formatted_latex.startswith("$"):
                 formatted_latex = f"${formatted_latex}$"
 
