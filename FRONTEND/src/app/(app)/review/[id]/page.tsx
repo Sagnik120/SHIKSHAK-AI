@@ -83,15 +83,6 @@ export default function ReviewPage() {
       )}
     </div>
   );
-          <AnimatePresence mode="wait">
-            <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="mt-6">
-              {tab === "watch" ? <Watch l={l} onRelearn={(nid) => act("relearn", nid)} /> : <Practice id={id} />}
-            </motion.div>
-          </AnimatePresence>
-        </>
-      )}
-    </div>
-  );
 }
 
 function Watch({ l, onRelearn }: { l: LessonDetail; onRelearn: (nodeId: string) => void }) {
@@ -142,13 +133,33 @@ function WatchCard({ node, i, canRelearn, onRelearn }: { node: LessonNode; i: nu
 }
 
 function Practice({ id }: { id: string }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const qc = useQueryClient();
   const q = useQuery({ queryKey: ["practice", id], queryFn: () => api.practice(id) });
+  const [making, setMaking] = useState(false);
   if (q.isLoading) return <Skeleton className="h-60 rounded-[var(--radius)]" />;
   const qs = q.data?.questions ?? [];
   if (!qs.length) return <p className="py-14 text-center text-ink-3">{t("review.noQuestions")}</p>;
+  const hi = lang === "hi";
+  const make = async () => {
+    setMaking(true);
+    try { qc.setQueryData(["practice", id], await api.generatePractice(id)); toast.success(hi ? "नए अभ्यास प्रश्न तैयार" : "Fresh practice ready"); }
+    catch (e) { toast.error((e as Error).message); } finally { setMaking(false); }
+  };
+  const labs = labsFor(qs.map((x) => x.concept).join(" "));
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50/40 p-4">
+        <Sparkles className="h-5 w-5 shrink-0 text-sky-600" />
+        <p className="min-w-0 flex-1 text-sm text-ink-2">{hi ? "आपकी कमज़ोर जगहों के लिए, आपके स्तर पर, नए प्रश्न बनाएँ।" : "Make new questions aimed at your weak spots, at your level."}</p>
+        <Button size="sm" onClick={make} status={making ? "loading" : "idle"}>{hi ? "नया अभ्यास" : "Fresh practice"}</Button>
+      </div>
+      {labs.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-2">
+          <FlaskConical className="h-4 w-4 text-sky-600" />{hi ? "करके सीखें:" : "Learn by doing:"}
+          {labs.map((l) => <Link key={l.id} href={`/lab?sim=${l.id}`} className="rounded-full border border-sky-200 bg-surface px-3 py-1 text-sky-700 hover:border-sky-400">{hi ? l.hi : l.en}</Link>)}
+        </div>
+      )}
       <p className="text-sm text-ink-3">{t("review.practiceNote")}</p>
       {qs.map((x, i) => <PracticeCard key={x.interaction_id} q={x} i={i} lessonId={id} />)}
     </div>
@@ -156,7 +167,7 @@ function Practice({ id }: { id: string }) {
 }
 
 function PracticeCard({ q, i, lessonId }: { q: PracticeQuestion; i: number; lessonId: string }) {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const [ans, setAns] = useState("");
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<PracticeResult | null>(null);
@@ -170,7 +181,10 @@ function PracticeCard({ q, i, lessonId }: { q: PracticeQuestion; i: number; less
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-display text-xl text-sky-600">{n(i + 1)}</span>
         <Badge>{q.concept}</Badge>
-        {q.needs_practice && <Badge tone="marigold" dot>{t("review.needsPractice")}</Badge>}
+        {q.generated ? (
+          <Badge tone="sky" dot>{lang === "hi" ? `नया · स्तर ${n(q.difficulty ?? 0)}` : `New · level ${n(q.difficulty ?? 0)}`}</Badge>
+        ) : q.needs_practice && <Badge tone="marigold" dot>{t("review.needsPractice")}</Badge>}
+        {q.generated && q.target && <span className="text-xs text-ink-3">{lang === "hi" ? "लक्ष्य" : "targets"}: {q.target.replace(/_/g, " ")}</span>}
         {q.last_practice && <span className="text-xs text-ink-3">{t("review.lastTime", { r: t(q.last_practice.correct ? "review.right" : "review.wrong") })}</span>}
       </div>
       <p className="mt-2 text-lg font-medium text-ink">{q.question_text}</p>
