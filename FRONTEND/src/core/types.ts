@@ -67,6 +67,10 @@ export interface Lesson {
   escalation: Escalation | null;
   needs_review: Array<{ node_id: string; concept: string }>;
   relearning?: string | null;
+  skill_concept_id?: string | null;
+  skill_goal_id?: string | null;
+  difficulty?: number | null;
+  difficulty_log?: Array<{ from: number; to: number; reason: string; at: string }>;
   review_pending: boolean;
   to_review: number;
 }
@@ -201,7 +205,12 @@ export interface PracticeQuestion {
   type: string;
   options: string[];
   your_lesson_answer: string | null;
-  lesson_correct: boolean;
+  lesson_correct: boolean | null;
+  needs_practice: boolean;
+  /** Practice Lab: freshly generated for a weak spot, at this level. */
+  generated?: boolean;
+  difficulty?: number | null;
+  target?: string | null;
   needs_practice: boolean;
   last_practice: { correct: boolean; answer: string; answered_at: string } | null;
 }
