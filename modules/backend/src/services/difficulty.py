@@ -43,3 +43,29 @@ def update(lesson: Lesson, evaluation: Any) -> Optional[dict]:
     """Apply one fresh graded answer. Returns the change, or None if the level stayed."""
     ev = evaluation.model_dump() if hasattr(evaluation, "model_dump") else dict(evaluation or {})
     correct = bool(ev.get("correct"))
+    credit = float(ev.get("partial_credit") or 0.0)
+
+    level = lesson.difficulty or LEVEL_BASE.get(lesson.level, 2)
+    state = dict(lesson.difficulty_state or {})
+    streak = int(state.get("streak", 0))
+    new, reason = level, None
+
+    if correct:
+        streak += 1
+        if streak >= UP_AFTER:
+            new, streak = _clamp(level + 1), 0
+            reason = f"{UP_AFTER} right in a row"
+    elif credit < WRONG_CREDIT:
+        new, streak = _clamp(level - 1), 0
+        reason = "a missed answer"
+    else:
+        streak = 0  # partly right: hold steady
+
+    state["streak"] = streak
+    change = None
+    if new != level and reason:
+        change = {"from": level, "to": new, "reason": reason, "at": datetime.now(timezone.utc).isoformat()}
+        state["log"] = (state.get("log") or [])[-19:] + [change]
+    lesson.difficulty = new
+    lesson.difficulty_state = state  # reassigned, so SQLAlchemy sees the JSON change
+    return change
