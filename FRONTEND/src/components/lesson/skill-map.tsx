@@ -73,4 +73,59 @@ export function SkillMap() {
       await qc.invalidateQueries({ queryKey: ["skill-map"] });
       await saveGoal(c.id);
       setQuery("");
+    } catch (e) { toast.error((e as Error).message); } finally { setAdding(false); }
+  };
+
+  if (q.isLoading || !data) return <Skeleton className="h-96 rounded-[var(--radius)]" />;
+
+  return (
+    <Card id="skill-map" className="scroll-mt-24 p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="font-display text-3xl text-ink">{tx.title}</h2>
+          <p className="mt-1 max-w-2xl text-sm text-ink-2">{tx.sub}</p>
+        </div>
+        <p className="text-sm font-medium text-ink-2">{n(data.mastered_count)} / {n(data.concepts.length)} {tx.mastered}</p>
+      </div>
+
+      {/* goal picker */}
+      <div className="relative mt-5">
+        <div className="flex items-center gap-2 rounded-2xl border border-line bg-paper px-4 py-2.5 focus-within:border-sky-400">
+          <Search className="h-4 w-4 shrink-0 text-ink-3" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tx.search} maxLength={80}
+            onKeyDown={(e) => { if (e.key === "Enter" && term) { if (matches[0] && (exact || matches.length === 1)) setGoal(matches[0].id); else void addTopic(); } }}
+            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3" />
+        </div>
+        <AnimatePresence>
+          {term && (
+            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-lift)]">
+              {matches.map((c) => (
+                <button key={c.id} onClick={() => setGoal(c.id)} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-paper-2">
+                  <Flag className="h-3.5 w-3.5 text-ink-3" /><span className="truncate">{c.title}</span>
+                </button>
+              ))}
+              {!exact && term.length >= 2 && (
+                <button onClick={() => void addTopic()} disabled={adding} className="flex w-full items-center gap-2 border-t border-line px-4 py-2.5 text-left text-sm text-sky-700 hover:bg-sky-50">
+                  {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                  <span className="truncate">{adding ? tx.adding : tx.add.replace("{t}", query.trim())}</span>
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+        <button onClick={() => setGoal(COURSE_GOAL)} className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium",
+          data.goal === COURSE_GOAL ? "border-marigold-600 bg-marigold-100 text-ink" : "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400")}>
+          <Sparkles className="h-3 w-3" />{tx.course}
+        </button>
+        {data.tracks.map((t) => (
+          <button key={t.id} onClick={() => setGoal(trackGoal(t.id))} className={cn("rounded-full border px-2.5 py-1",
+            data.goal === trackGoal(t.id) ? "border-marigold-600 bg-marigold-100 text-ink" : "border-line text-ink-2 hover:border-sky-300")}>
+            {t.title}
+          </button>
+        ))}
+        {data.goal && !saving && (
 }
