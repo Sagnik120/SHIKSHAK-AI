@@ -34,7 +34,13 @@ class MuseTalkAvatarAdapter:
         self.output_dir = output_dir
         self.force_tier2 = force_tier2
         self.test_mode = test_mode
-        self.fallback = VisemeAvatarAdapter(output_dir=output_dir)
+        # Illustrated avatar by default (it falls back to the viseme avatar on
+        # its own); AVATAR_STYLE=classic keeps the original Tier 1 cartoon.
+        if os.environ.get("AVATAR_STYLE", "illustrated").lower() == "classic":
+            self.fallback = VisemeAvatarAdapter(output_dir=output_dir)
+        else:
+            from modules.avatar_voice.src.avatar.illustrated_avatar import IllustratedAvatarAdapter
+            self.fallback = IllustratedAvatarAdapter(output_dir=output_dir)
 
     def diagnose_environment(self) -> dict:
         """Inspect host environment for CUDA acceleration and model weight checkpoints."""
