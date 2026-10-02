@@ -98,3 +98,53 @@ def start(db: Session, user: User, cid: str) -> dict:
         user.review_json = reviews
     return _public(cid, item["title"], entry)
 
+
+def answer(db: Session, user: User, cid: str, qid: str, text: str) -> dict:
+    from modules.backend.src.services.practice_service import check_answer
+
+    reviews = dict(user.review_json or {})
+    entry = dict(reviews.get(cid) or {})
+    q = next((q for q in entry.get("pending") or [] if q["id"] == qid), None)
+    if q is None:
+        raise ReviewError("That review question isn't available.")
+    if not (text or "").strip():
+        raise ReviewError("Type or pick an answer first.")
+    correct, feedback = check_answer(q["type"], q["expected_concept"], q["node_id"], text.strip())
+    answers = dict(entry.get("answers") or {})
+    answers[qid] = correct
+    entry["answers"] = answers
+    result = {"correct": correct, "feedback_text": feedback, "model_answer": q["expected_concept"], "finished": False}
+
+    if len(answers) == len(entry["pending"]):
+        passed = sum(answers.values()) * 2 >= len(answers) + 1   # more than half right
+        step = INTERVALS.index(entry["interval"]) if entry["interval"] in INTERVALS else 0
+        interval = INTERVALS[min(step + 1, len(INTERVALS) - 1)] if passed else INTERVALS[0]
+        now = _now()
+        entry.update(interval=interval, last=now.isoformat(), due=(now + timedelta(days=interval)).isoformat(),
+                     lapsed=None if passed else now.isoformat(), pending=None, answers={})
+        result.update(finished=True, passed=passed, next_in_days=interval)
+    reviews[cid] = entry
+    user.review_json = reviews
+    return result
+
+
+def _public(cid: str, title: str, entry: dict) -> dict:
+    return {"id": cid, "title": title, "questions": [
+        {k: q[k] for k in ("id", "question_text", "type", "options")} | {"answered": q["id"] in (entry.get("answers") or {})}
+        for q in entry["pending"]]}
+
+
+def _questions(db: Session, item: dict, user: User) -> list[dict]:
+    from modules.ai_agent_orchestration.src.schemas.lesson import LessonNode
+    from modules.ai_agent_orchestration.src.schemas.teaching import TeachingSegment
+    from modules.backend.src.services import skill_map
+    from modules.backend.src.services.session_manager import session_manager
+
+    lesson = db.get(Lesson, item["lesson_id"]) if item.get("lesson_id") else None
+    graph = skill_map.concepts()
+    questioner = session_manager._ai.orchestrator.questioner
+    if lesson is None:
+        return _concept_questions(item, graph, user, questioner)
+    rows = [n for n in lesson.nodes if n.script_text]
+    # The nodes that taught this concept; a lesson tagged with it covers all its nodes.
+    mine = [n for n in rows if lesson.skill_concept_id == item["id"] or skill_map.match_concept(n.concept, graph) == item["id"]]
