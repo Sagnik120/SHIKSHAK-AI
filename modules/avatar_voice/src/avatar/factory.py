@@ -29,6 +29,10 @@ class AvatarFactory:
         if engine_key in ("tier1", "viseme", "procedural"):
             return VisemeAvatarAdapter(output_dir=output_dir)
 
+        if engine_key in ("illustrated", "tier1.5"):
+            from modules.avatar_voice.src.avatar.illustrated_avatar import IllustratedAvatarAdapter
+            return IllustratedAvatarAdapter(output_dir=output_dir)
+
         if engine_key in ("tier2", "musetalk", "neural"):
             return MuseTalkAvatarAdapter(
                 checkpoint_dir=checkpoint_dir,
