@@ -128,4 +128,62 @@ export function SkillMap() {
           </button>
         ))}
         {data.goal && !saving && (
+          <button onClick={() => setGoal(null)} className="inline-flex items-center gap-1 px-1.5 text-ink-3 hover:text-ink"><X className="h-3 w-3" />{tx.clear}</button>
+        )}
+        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin text-ink-3" />}
+      </div>
+
+      {/* map */}
+      <div className="mt-6 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
+        {data.tracks.map((track) => {
+          const cs = data.concepts.filter((c) => c.track === track.id);
+          const m = cs.filter((c) => c.mastery?.state === "mastered").length;
+          return (
+          <div key={track.id} className="min-w-0 break-inside-avoid rounded-2xl border border-line bg-paper/40 p-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-xs font-semibold uppercase tracking-wider text-ink-3" title={track.title}>{track.title}</p>
+              <span className="shrink-0 font-mono text-[11px] text-ink-3">{m}/{cs.length}</span>
+            </div>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-paper-3">
+              <motion.div className="h-full rounded-full bg-sage" initial={{ width: 0 }} animate={{ width: `${cs.length ? (m / cs.length) * 100 : 0}%` }} transition={{ duration: 0.8 }} />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {cs.map((c) => (
+                <Chip key={c.id} c={c} goal={c.id === data.goal} route={onRoute.has(c.id)} pre={hoverPre.has(c.id)}
+                  onHover={setHover} onPick={() => setGoal(c.id)} customLabel={tx.custom} />
+              ))}
+            </div>
+          </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-3">
+        {[["bg-sage", tx.legend[0]], ["bg-amber", tx.legend[1]], ["bg-sky-400", tx.legend[2]], ["ring-2 ring-sky-300 bg-surface", tx.legend[3]]].map(([c, l]) => (
+          <span key={l} className="inline-flex items-center gap-1.5"><span className={cn("h-2.5 w-2.5 rounded-full", c)} />{l}</span>
+        ))}
+        <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" />{tx.hint}</span>
+      </div>
+    </Card>
+  );
+}
+
+function Chip({ c, goal, route, pre, onHover, onPick, customLabel }: {
+  c: SkillConcept; goal: boolean; route: boolean; pre: boolean; onHover: (id: string | null) => void; onPick: () => void; customLabel: string;
+}) {
+  const st = c.mastery?.state;
+  return (
+    <button onClick={onPick} onMouseEnter={() => onHover(c.id)} onMouseLeave={() => onHover(null)} onFocus={() => onHover(c.id)} onBlur={() => onHover(null)}
+      title={c.mastery?.score != null ? `${Math.round(c.mastery.score * 100)}%` : undefined}
+      className={cn("inline-flex max-w-[16rem] items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-all",
+        goal ? "border-marigold-600 bg-marigold-100 font-semibold text-ink" :
+        st === "mastered" ? "border-sage/40 bg-sage-100 text-ink" :
+        st === "practice" ? "border-amber/50 bg-amber-100 text-ink" :
+        st === "started" ? "border-sky-200 bg-sky-50 text-ink" : "border-line text-ink-2 hover:border-sky-300",
+        route && !goal && "ring-2 ring-sky-300", pre && "scale-105 border-sky-500 shadow-[var(--shadow-soft)]")}>
+      {goal && <Flag className="h-3 w-3 shrink-0" />}
+      {st === "mastered" && !goal && <Check className="h-3 w-3 shrink-0 text-sage" />}
+      <span className="truncate" title={c.title}>{c.title}</span>
+      {c.custom && <span className="rounded-full bg-sky-100 px-1.5 text-[0.6rem] text-sky-700">{customLabel}</span>}
+    </button>
+  );
 }
