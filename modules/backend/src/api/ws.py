@@ -684,6 +684,7 @@ class LiveSession:
             session_manager.step, self.lesson, TeacherState.EVALUATE, {"student_response": response}
         )
         lesson_service.record_evaluation(self.db, self.lesson, interaction, evaluation)
+        change = self._update_difficulty(evaluation)
         self.commit()
         await self.send("evaluation_result", {**_as_dict(evaluation), "interaction_id": interaction.id})
         return await self._adapt(interaction, evaluation)
@@ -704,6 +705,20 @@ class LiveSession:
                                                     "reason": "Your answer was empty."})
             elif message.event_type == "reaction":
                 self._log_reaction(message)
+
+    def _update_difficulty(self, evaluation: Any) -> Optional[dict]:
+        """Move the live level from this fresh grade; the next explanation and
+        questions are generated at it. Never allowed to break the lesson."""
+        try:
+            from modules.backend.src.services import difficulty
+
+            change = difficulty.update(self.lesson, evaluation)
+            session = session_manager.get_or_restore(self.lesson, self.db)
+            session.constraints = session_manager.constraints_for(self.lesson)
+            return change
+        except Exception:
+            logger.exception("Difficulty update failed for %s", self.lesson.id)
+            return None
 
     async def _adapt(self, interaction: Interaction, evaluation: Any) -> Optional[TeacherState]:
         next_state, decision = await self._run(
