@@ -1,90 +1,185 @@
 <div align="center">
 
-# 🎓 Shikshak AI (शिक्षक AI)
+# 🎓 Shikshak AI · शिक्षक AI
 
-### Autonomous, Multimodal AI Educator with Real-Time Pedagogical Adaptation & Viseme Lip-Synced Video Instruction
+### A personalised AI tutor for learning AI
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![SQLite WAL](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?style=flat&logo=sqlite&logoColor=white)](https://sqlite.org/wal.html)
-[![BGE-M3 RAG](https://img.shields.io/badge/RAG-BGE--M3_Hybrid-FF6F00?style=flat)](https://huggingface.co/BAAI/bge-m3)
-[![Google Gemini](https://img.shields.io/badge/LLM-Google_Gemini-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](#-option-c--docker)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Now-6C63FF?style=flat)](https://shikshak-ai.onrender.com/)
+*Builds your learning path · teaches on video with an AI avatar · checks your understanding · adapts difficulty, explanations and practice to your progress*
 
-**Build Fast with AI Hackathon** · *AI Teacher Track*
+<br/>
 
-[Overview](#-project-overview) · [Features](#-key-features) · [Architecture](#%EF%B8%8F-system-architecture) · [Tech Stack](#%EF%B8%8F-technologies-used) · [Setup](#%EF%B8%8F-setup--installation) · [Run](#-how-to-run-the-project) · [Demo](#-demo) · [Team](#-team)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+<br/>
+[![Gemini](https://img.shields.io/badge/LLM-Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![RAG](https://img.shields.io/badge/RAG-BGE--M3_Hybrid-FF6F00?style=for-the-badge)](https://huggingface.co/BAAI/bge-m3)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org/wal.html)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-option-c--docker-any-os)
+[![Platforms](https://img.shields.io/badge/Runs_on-Windows_·_macOS_·_Linux-555?style=for-the-badge)](#%EF%B8%8F-setup--installation)
+
+<br/>
+
+**🏆 Build Fast with AI Hackathon** · Problem statement: *Personalised AI Tutor for Learning AI*
+
+[🌐 Live demo](https://shikshak-ai.onrender.com/) · [▶️ Demo video](https://drive.google.com/drive/folders/1ibsr1tZanhtruCBbIwiGkAy0mXx35XLY?usp=drive_link) · [⚡ Quick start](#-quick-start-tldr) · [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough)
 
 </div>
 
 ---
 
+## 📑 Table of Contents
+
+| | Section | What you'll find |
+| :---: | :--- | :--- |
+| ⚡ | [Quick start (TL;DR)](#-quick-start-tldr) | Run the project in 3 commands |
+| 💡 | [Project overview](#-project-overview) | The problem, our solution, and how it maps to the problem statement |
+| ✨ | [Key features](#-key-features) | Everything the tutor does, grouped by purpose |
+| 🏗️ | [System architecture](#%EF%B8%8F-system-architecture) | How the pieces fit together, with diagrams |
+| 🛠️ | [Technologies used](#%EF%B8%8F-technologies-used) | The full stack, layer by layer |
+| 📁 | [Project structure](#-project-structure) | Where everything lives in the repo |
+| ⚙️ | [Setup & installation](#%EF%B8%8F-setup--installation) | Step-by-step for 🪟 Windows, 🍎 macOS and 🐧 Linux |
+| 🚀 | [How to run the project](#-how-to-run-the-project) | Local, Docker and production modes |
+| 🧭 | [2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough) | A guided tour of the best moments |
+| 🧪 | [Testing](#-testing) | Running the test suites |
+| 🩺 | [Troubleshooting](#-troubleshooting) | Fixes for common problems, per OS |
+| 👥 | [Team](#-team) | Who built it |
+
+> [!TIP]
+> **Judges:** the fastest path is [⚡ Quick start](#-quick-start-tldr) → [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough). No API keys are needed to run it.
+
+---
+
+## ⚡ Quick start (TL;DR)
+
+> Needs **Python 3.10+**, **Node.js 20+** and **pnpm**. Full per-OS steps are in [⚙️ Setup](#%EF%B8%8F-setup--installation).
+
+```bash
+git clone https://github.com/Sagnik120/SHIKSHAK-AI.git && cd SHIKSHAK-AI
+```
+
+| Step | 🍎 macOS / 🐧 Linux | 🪟 Windows (PowerShell) |
+| :--- | :--- | :--- |
+| **1. Backend** | `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && python scripts/run_server.py` | `py -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt; python scripts\run_server.py` |
+| **2. Frontend** *(new terminal)* | `cd FRONTEND && pnpm install && pnpm dev` | `cd FRONTEND; pnpm install; pnpm dev` |
+| **3. Open** | **http://localhost:3000** | **http://localhost:3000** |
+
+🔑 Log in with the seeded demo learner: **`demo@shikshak.ai`** / **`DemoStudent@123`**
+
+---
+
 ## 💡 Project Overview
 
-**Shikshak AI** is an autonomous AI teacher. It turns unstructured study material, such as textbooks, PDFs, lecture notes or a topic name, into **interactive, adaptive, video-based lessons** delivered by a lip-synced AI avatar.
+### 🎯 The problem statement
 
-Most AI learning tools are **passive chatbots**: they wait for a question and reply with a wall of text. Human tutors are far more effective because they *plan*, *explain*, *check understanding* and *adapt*, but they don't scale. Shikshak AI closes that gap with a **multi-agent pedagogical state machine** that teaches the way a good tutor does:
+> **Personalised AI Tutor for Learning AI**
+> *Build an adaptive AI tutor that creates personalised learning paths and adjusts difficulty, explanations, and practice based on each learner's progress.*
 
-> **Plans** a curriculum → **explains** with voice, avatar and visual boards → **questions** the learner → **evaluates** free-form answers against rubrics → **diagnoses misconceptions** → **adapts** the lesson in real time.
+### 😟 Why this is hard today
 
-Every explanation is **grounded in the learner's own material** through hybrid RAG, so the AI teaches from the source and doesn't hallucinate. The system also tracks long-term mastery with a **skill map**, **personalised learning paths**, **placement checks** and **spaced-repetition reviews**.
+Everyone is learning AI, but most courses teach it the **same way, at the same pace, to everyone**. AI concepts stack on each other (gradients → backprop → attention → transformers), so missing one quietly breaks everything after it. Videos don't notice when you're lost, and chatbots wait for you to know what to ask.
 
-### 🎯 Problem → Solution
+### 🌱 Our solution
 
-| Problem | How Shikshak AI solves it |
-| :--- | :--- |
-| One-size-fits-all content | 7-state FSM that adapts each step to the learner's answers |
-| Hallucinating AI tutors | BGE-M3 hybrid retrieval + cross-encoder reranking + grounding verifier |
-| Answers graded by keyword matching | Rubric-based semantic evaluation + misconception taxonomy |
-| Text-only learning | Avatar video with Edge-TTS voice, 24 FPS visemes, LaTeX/plot/code boards |
-| No sense of progress | Skill map, learning path, placement check, spaced review, reports |
-| Language barriers | Full English + Hindi (हिन्दी) interface |
+**Shikshak AI** is an AI teacher that **notices**. It builds a route to whatever you want to understand, teaches each step on video with a lip-synced avatar, **pauses to check you understood**, and changes *how* it teaches the moment you don't.
+
+```mermaid
+flowchart LR
+    A[🎯 Pick a goal<br/>e.g. Transformers] --> B[🗺️ Personal route<br/>skips what you know]
+    B --> C[🎬 Video lesson<br/>avatar + boards]
+    C --> D[⏸️ Checkpoint<br/>question]
+    D -->|✅ right| E[📈 Level up<br/>deeper next part]
+    D -->|❌ wrong| F[🔁 Re-explain<br/>simpler, new example]
+    E --> G[🧪 Targeted practice<br/>+ simulations]
+    F --> G
+    G --> H[🔄 Spaced review<br/>before you forget]
+    H --> B
+```
+
+### ✅ How every part of the problem statement is covered
+
+| Problem statement asks for | How Shikshak AI does it | Where to see it |
+| :--- | :--- | :--- |
+| 🗺️ **Personalised learning paths** | AI skill map of 70+ concepts (probability → Mamba) · goal-driven routes that skip mastered prerequisites · auto-inserted recaps · placement check · grows itself when you add a new AI topic | **Learning path** page |
+| 📶 **Adjusts difficulty** | Live 1–5 level: 2 right in a row → step up, a miss → step down · carries into your next lesson | ●●●○○ meter in the classroom |
+| 💬 **Adjusts explanations** | Re-explain → rebuild in simpler steps → hand to a mentor · each lesson is planned around what *you* already know | **Why?** tab in the classroom |
+| 🧪 **Adjusts practice** | Fresh questions aimed at your weakest concepts (easier where you struggled, harder as a stretch) · interactive AI simulations | Lesson **Practice** page · **Practice Lab** |
+| 📈 **Based on each learner's progress** | Per-concept mastery from graded answers · spaced review brings fading concepts back · reports | **Progress**, **Refresh**, lesson **Report** |
+| 🤖 **Learning *AI*** | AI-specific curriculum, AI simulations (gradient descent, overfitting, attention) | **Practice Lab** |
 
 ---
 
 ## ✨ Key Features
 
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🗺️ Personalised learning path
+- 🎯 **Three ways to learn:** *Learn AI from zero*, *reach a specific topic*, or *just explore*
+- 🧩 **Skill map:** 6 tracks (Math · Classical ML · Deep learning · Language & transformers · Generative AI · Frontier)
+- 🧭 **Goal routes** with a reason for every step
+- 📝 **Placement check:** ~6 adaptive questions, graded on the server
+- 🌱 **Self-growing map:** type any new AI topic and the AI places it under its prerequisites
+
+</td>
+<td width="50%" valign="top">
+
 ### 🧠 Adaptive teaching engine
-- **7-state pedagogical FSM:** `UNDERSTAND → PLAN → EXPLAIN → DEMONSTRATE → QUESTION → EVALUATE → ADAPT → CONTINUE`
-- **Specialised agents:** Planner, Explainer, Questioner, Assessment Agent and Adaptation Controller
-- **Adaptive remediation:** after each checkpoint the controller decides `ALLOW` (continue), `MODIFY` (re-explain more simply), `REGENERATE` (new remediation path) or `HUMAN` (escalate to a mentor)
-- **Why-Log:** records the reason behind every adaptation, so learners can see why the lesson changed
-- **Difficulty calibrator:** adjusts question difficulty to the learner's performance
+- 🔄 **7-state FSM:** Understand → Plan → Explain → Question → Evaluate → Adapt → Continue
+- 🤝 **Specialised agents:** Planner, Explainer, Questioner, Assessor, Adaptation Controller
+- 📶 **Live difficulty** (levels 1–5) shapes every next explanation and question
+- 🪜 **Escalation ladder:** re-explain → rebuild → mentor handover
+- 💡 **"Why?" log:** every adaptive decision explained in plain words
 
-### 📚 Grounded knowledge (RAG)
-- Document parsing → semantic chunking → **BGE-M3 dense + sparse embeddings** → **ChromaDB**
-- **Cross-encoder reranking** and a **grounding verifier** keep answers tied to the source
+</td>
+</tr>
+<tr>
+<td valign="top">
 
-### 📝 Intelligent assessment (ML Core)
-- Concept extraction from uploaded material
-- **Multi-criterion rubric evaluation** of free-form answers
-- **Misconception taxonomy:** identifies *what* the learner got wrong, not just *that* they were wrong
-- Visual suggestion engine picks the best visual aid for each concept
+### 🎬 Multimodal video lessons
+- 🗣️ **Edge-TTS** voice in English and Hindi
+- 👩‍🏫 **Illustrated avatar** with blinking, head motion and 6 lip-sync mouth shapes
+- 🧾 **Visual boards:** concept maps, flows, LaTeX equations, plots, code
+- 🎞️ **FFmpeg compositor** streams segments live over WebSocket
+- ⏸️ **In-video checkpoints** placed at sentence boundaries
 
-### 🎬 Multimodal video instruction
-- **Edge-TTS** speech synthesis
-- **24 FPS viseme lip-sync** for the teacher avatar
-- Visual boards rendered with **LaTeX, Matplotlib, Pygments and Graphviz**
-- **FFmpeg compositor** merges everything into video segments streamed over **WebSocket**
+</td>
+<td valign="top">
 
-### 🗺️ Learning journey
-- **AI skill map:** every concept with its mastery state and prerequisites
-- **Learning path:** a step-by-step route to any goal ("Learn AI from zero", a track, or any custom topic)
-- **Placement check:** about 6 adaptive questions that skip what you already know
-- **Spaced review (Refresh):** brings concepts back before you forget them
-- **Practice Lab:** interactive simulations and code challenges
-- **Diagnostic reports:** strengths, gaps and misconceptions after each lesson
+### 🧪 Practice & retention
+- 🎯 **Targeted practice** generated for your weakest concepts
+- 🔬 **Practice Lab:** predict → run → see why simulations
+- 🔄 **Spaced review:** 2 → 5 → 12 → 30 → 60-day intervals
+- 📊 **Reports:** strengths, gaps, misconceptions
+- 🔥 **Streaks, levels and badges**
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 📚 Grounded in your material (RAG)
+- 📄 Upload **PDF, DOCX, PPTX, TXT, MD**
+- 🔎 **BGE-M3 dense + sparse** hybrid retrieval in **ChromaDB**
+- 🎯 **Cross-encoder reranking** + agentic query refinement
+- 📌 Page-level **citations**; weak matches are refused, not guessed
+
+</td>
+<td valign="top">
 
 ### 🔐 Production-grade platform
-- JWT access tokens + **rotating HTTP-only refresh tokens**, bcrypt hashing, login lockout
-- OTP email verification (SMTP / Resend) with a dev fallback
-- **Durable sessions:** FSM state is persisted in SQLite WAL, so interrupted lessons resume exactly where they stopped
-- Agent trace sink (MLOps) records every agent call for observability
-- Bilingual UI (English / Hindi) and Docker deployment
+- 🔑 JWT + rotating HTTP-only refresh tokens, bcrypt, login lockout
+- ✉️ OTP email verification (SMTP / Resend, with a dev fallback)
+- 💾 Durable sessions in **SQLite WAL**: lessons resume where they stopped
+- 🌐 Full **English / हिन्दी** interface
+- 📈 Agent trace sink for observability · 🐳 Docker ready
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -94,39 +189,45 @@ Every explanation is **grounded in the learner's own material** through hybrid R
 
 ![Shikshak AI System Architecture](docs/images/shikshak_system_architecture.png)
 
-*Fig. 1. End-to-end architecture of Shikshak AI: the multi-agent pedagogical FSM, hybrid RAG grounding, rubric-based ML evaluation and multimodal avatar video synthesis.*
+*Fig. 1. End-to-end architecture: multi-agent pedagogical FSM, hybrid RAG grounding, rubric-based evaluation and multimodal avatar video.*
 
 </div>
 
-### 🔄 End-to-end flow
+### 🔄 Request flow
 
-```
- Learner ──► Next.js Frontend ──REST/WS──► FastAPI Backend (JWT Auth, Session Manager)
-                                                  │
-           ┌──────────────────────────────────────┼─────────────────────────────────┐
-           ▼                                      ▼                                 ▼
-   RAG Pipeline                     Agent Orchestrator (7-State FSM)           ML Core
-   Parse → Chunk → BGE-M3     ◄───  Planner · Explainer · Questioner   ───►  Rubric Eval
-   → ChromaDB → Rerank              Assessment · Adaptation Controller       Misconceptions
-   → Grounding                                    │   ▲                      Concepts
-                                                  │   └── ADAPT loop (ALLOW/MODIFY/REGENERATE/HUMAN)
-                                                  ▼
-                               Avatar & Voice Engine (Edge-TTS · Visemes · Boards · FFmpeg)
-                                                  │
-                                                  ▼  WebSocket stream
-                                           Classroom (Learner)
-                                                  │
-                            SQLite WAL  ◄─────────┴────────►  Agent Trace Sink (MLOps)
-               (sessions, mastery, skill map, reviews, reports)
+```mermaid
+flowchart TB
+    U([👩‍🎓 Learner]) --> FE[🖥️ Next.js frontend<br/>dashboard · path · classroom · lab]
+    FE <-->|REST + WebSocket| BE[⚙️ FastAPI backend<br/>auth · sessions · skill map · reviews]
+
+    BE --> ORCH[🧠 Agent orchestrator<br/>7-state FSM]
+    ORCH --> P[📋 Planner]
+    ORCH --> X[💬 Explainer]
+    ORCH --> Q[❓ Questioner]
+    ORCH --> AC[🔁 Adaptation controller]
+
+    P & X <--> RAG[📚 RAG<br/>BGE-M3 · ChromaDB · reranker]
+    Q --> ML[📝 ML core<br/>rubric grading · misconceptions]
+    ML --> AC
+
+    X --> AV[🎬 Avatar & voice<br/>Edge-TTS · avatar · boards · FFmpeg]
+    AV -->|video segments| FE
+
+    BE <--> DB[(💾 SQLite WAL<br/>mastery · paths · reviews)]
+    ORCH --> TR[📈 Agent trace sink]
 ```
 
-1. **Ingest:** the learner uploads material or picks a topic. It is parsed, chunked, embedded with BGE-M3 and indexed in ChromaDB.
-2. **Plan:** the Planner Agent retrieves grounded context and uses Gemini to build a structured lesson plan.
-3. **Explain:** the Explainer writes the script. The media engine renders voice, avatar visemes and visual boards, and FFmpeg composes the video.
-4. **Stream:** segments are streamed live to the classroom over WebSocket.
-5. **Question & evaluate:** the Questioner asks a checkpoint question. The ML Core grades the answer against a rubric and detects misconceptions.
-6. **Adapt:** the Adaptation Controller continues, re-explains, regenerates the path or escalates to a human. The Why-Log records the reason.
-7. **Persist & review:** mastery updates the skill map and learning path, spaced reviews are scheduled, and a diagnostic report is generated.
+### 🪜 The teaching loop, step by step
+
+| # | Stage | What happens |
+| :---: | :--- | :--- |
+| 1️⃣ | **Ingest** | Your topic or document is parsed, chunked, embedded with BGE-M3 and indexed in ChromaDB |
+| 2️⃣ | **Plan** | The Planner builds a lesson from your goal, your route and your past mastery |
+| 3️⃣ | **Explain** | The Explainer writes a script at your current difficulty level; the media engine renders voice, avatar and boards |
+| 4️⃣ | **Stream** | Video segments stream live to the classroom over WebSocket |
+| 5️⃣ | **Check** | The video pauses for a checkpoint question; the ML core grades it against a rubric |
+| 6️⃣ | **Adapt** | Difficulty moves, and the controller continues, re-explains, rebuilds or escalates; the Why? log records the reason |
+| 7️⃣ | **Remember** | Mastery updates your skill map, the next step is chosen, and a spaced review is scheduled |
 
 ---
 
@@ -134,221 +235,399 @@ Every explanation is **grounded in the learner's own material** through hybrid R
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS 4, TanStack Query, Motion, React Three Fiber, Lucide, Sonner |
-| **Legacy frontend** | Vanilla HTML5 / CSS3 / JavaScript SPA (`modules/frontend`) |
-| **Backend** | Python 3.10+, FastAPI, WebSockets, Pydantic, Uvicorn |
-| **Database** | SQLite (WAL mode), SQLAlchemy ORM |
-| **LLM / Agents** | Google Gemini, custom multi-agent orchestration (FSM) |
-| **RAG** | BGE-M3 hybrid embeddings, ChromaDB, cross-encoder reranker |
-| **ML / NLP** | Rubric evaluator, misconception taxonomy, concept extraction |
-| **Media** | Edge-TTS, viseme generator, LaTeX, Matplotlib, Pygments, Graphviz, FFmpeg |
-| **Security** | JWT, rotating refresh tokens, bcrypt, rate limiting, OTP verification |
-| **DevOps** | Docker, Docker Compose, Render, pytest |
+| 🖥️ **Frontend** | Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · TanStack Query · Motion · React Three Fiber · Lucide · Sonner |
+| ⚙️ **Backend** | Python 3.10+ · FastAPI · WebSockets · Pydantic · Uvicorn |
+| 💾 **Database** | SQLite (WAL mode) · SQLAlchemy ORM (new columns are added automatically on start) |
+| 🧠 **LLM & agents** | Google Gemini · custom multi-agent orchestration (FSM) · built-in offline teacher when no key is set |
+| 📚 **RAG** | BGE-M3 hybrid embeddings · ChromaDB · cross-encoder reranker · agentic query refinement |
+| 📝 **ML / NLP** | Rubric evaluator · misconception taxonomy · concept extraction |
+| 🎬 **Media** | Edge-TTS · Pillow avatar renderer · Matplotlib · LaTeX (mathtext) · Pygments · FFmpeg (system or bundled `imageio-ffmpeg`) |
+| 🔐 **Security** | JWT · rotating refresh tokens · bcrypt · rate limiting · OTP verification |
+| 🚢 **DevOps** | Docker · Docker Compose · Render · pytest |
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 SHIKSHAK-AI/
-├── FRONTEND/                     # Next.js 16 web app (learner, mentor, admin)
+├── 🖥️ FRONTEND/                    Next.js 16 web app (learner, mentor, admin)
 │   └── src/
-│       ├── app/                  # Routes: dashboard, path, learn, lab, refresh, report, progress…
-│       ├── components/           # UI, lesson, lab, layout components
-│       ├── features/classroom/   # Live classroom controller + panels
-│       └── core/                 # API client, types, i18n (en / hi)
-├── modules/
-│   ├── backend/                  # FastAPI app: API routes, WebSocket, DB models, services
-│   ├── ai_agent_orchestration/   # Agents, prompts, schemas, 7-state FSM orchestrator
-│   ├── rag/                      # Parsing, chunking, embedding, indexing, retrieval, grounding
-│   ├── ml_core/                  # Answer evaluation, misconceptions, concept extraction
-│   ├── avatar_voice/             # TTS, avatar visemes, visual boards, FFmpeg compositor
-│   ├── mlops/                    # Agent trace logging
-│   └── frontend/                 # Legacy static frontend
-├── scripts/                      # Server runner, preflight checks, diagnostics, E2E scripts
-├── tests/                        # unit / integration / e2e / smoke / eval suites
-├── docs/                         # Architecture, deployment, curriculum, specs, images
-├── data/  chroma_db/  models/    # Runtime data, vector store, downloaded models
-├── Dockerfile  docker-compose.yml
-├── requirements.txt  requirements-lite.txt
-└── .env.example
+│       ├── app/                    Routes: dashboard, path, learn, lab, refresh, review, report, progress…
+│       ├── components/             UI, lesson, lab and layout components
+│       ├── features/classroom/     Live classroom controller and panels
+│       └── core/                   API client, types, i18n (en / hi)
+├── 🧩 modules/
+│   ├── backend/                    FastAPI app: routes, WebSocket, DB models, services
+│   ├── ai_agent_orchestration/     Agents, prompts, schemas, 7-state FSM
+│   ├── rag/                        Parsing, chunking, embedding, retrieval, grounding
+│   ├── ml_core/                    Answer evaluation, misconceptions, concept extraction
+│   ├── avatar_voice/               TTS, avatar, visual boards, FFmpeg compositor, fonts
+│   ├── mlops/                      Agent trace logging
+│   └── frontend/                   Legacy static frontend (served by the backend)
+├── 🛠️ scripts/                     Server runner, preflight check, model download, demo helpers
+├── 🧪 tests/                       Unit, integration, e2e, smoke and eval suites
+├── 📚 docs/                        Architecture, deployment, curriculum, specs, images
+├── 📦 demo_data/                   Sample documents for testing grounded lessons
+├── 💾 data/ · chroma_db/ · models/ Runtime data, vector store, downloaded models
+├── 🐳 Dockerfile · docker-compose.yml
+├── 📋 requirements.txt · requirements-lite.txt
+└── 🔧 .env.example
 ```
 
 ---
 
 ## ⚙️ Setup & Installation
 
-### Prerequisites
+### 📋 Prerequisites
 
-| Tool | Version | Notes |
-| :--- | :--- | :--- |
-| Python | 3.10+ | Backend and AI modules |
-| Node.js | 20+ | Next.js frontend |
-| pnpm | 9+ | `npm i -g pnpm` |
-| FFmpeg | any recent | Must be on your system `PATH` (video composition) |
-| Git | any | |
-| Gemini API key | — | Free from [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| Tool | Version | Required? | Why |
+| :--- | :--- | :---: | :--- |
+| 🐍 **Python** | 3.10 or newer (3.11 recommended) | ✅ | Backend and AI modules |
+| 🟩 **Node.js** | 20 or newer (LTS) | ✅ | Next.js frontend |
+| 📦 **pnpm** | 9 or newer | ✅ | Frontend package manager |
+| 🌿 **Git** | any | ✅ | Cloning the repo |
+| 🎞️ **FFmpeg** | any recent | ➖ Optional | Faster video composition. A bundled copy is used if it's missing |
+| 🔤 **FriBidi** | any | ➖ Optional | Correct Hindi text shaping on video boards (macOS / Linux) |
+| 🔑 **Gemini API key** | — | ➖ Recommended | Live AI teaching. Free from [Google AI Studio](https://aistudio.google.com/app/apikey). Without it, a built-in offline teacher runs |
 
-### 1. Clone the repository
+Pick your operating system and follow the steps **in order**. Each step ends with a ✅ check, so you know it worked before moving on.
+
+<details open>
+<summary><h3>🪟 Windows 10 / 11</h3></summary>
+
+> Run these in **PowerShell**. Commands for the classic Command Prompt are given where they differ.
+
+**1️⃣ Install the tools** (skip any you already have)
+```powershell
+winget install -e --id Python.Python.3.11
+winget install -e --id OpenJS.NodeJS.LTS
+winget install -e --id Git.Git
+winget install -e --id Gyan.FFmpeg        # optional
+```
+Close and reopen PowerShell so the new tools are on your `PATH`, then:
+```powershell
+npm install -g pnpm
+```
+✅ Check: `py --version`, `node --version` and `pnpm --version` all print a version.
+
+**2️⃣ Get the code**
+```powershell
+git clone https://github.com/Sagnik120/SHIKSHAK-AI.git
+cd SHIKSHAK-AI
+```
+
+**3️⃣ Create and activate a Python virtual environment**
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+> If activation is blocked ("running scripts is disabled"), run once:
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, then activate again.
+> In **Command Prompt**, activate with `.venv\Scripts\activate.bat`.
+
+✅ Check: your prompt now starts with `(.venv)`.
+
+**4️⃣ Install the backend dependencies**
+```powershell
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+> Low on memory or disk? Use `pip install -r requirements-lite.txt` instead.
+
+**5️⃣ Create your environment file**
+```powershell
+Copy-Item .env.example .env        # Command Prompt: copy .env.example .env
+```
+Open `.env` in any editor and (optionally) set `GEMINI_API_KEY`. See [🔧 Environment variables](#-environment-variables).
+
+**6️⃣ Install the frontend dependencies**
+```powershell
+cd FRONTEND
+pnpm install
+cd ..
+```
+✅ Done. Continue to [🚀 How to run](#-how-to-run-the-project).
+
+</details>
+
+<details>
+<summary><h3>🍎 macOS (Intel & Apple Silicon)</h3></summary>
+
+**1️⃣ Install the tools** with [Homebrew](https://brew.sh) (skip any you already have)
+```bash
+brew install python@3.11 node git ffmpeg fribidi
+npm install -g pnpm
+```
+> `fribidi` makes Hindi text on video boards join correctly. `scripts/run_server.py` finds it automatically.
+
+✅ Check: `python3.11 --version`, `node --version` and `pnpm --version` all print a version.
+
+**2️⃣ Get the code**
 ```bash
 git clone https://github.com/Sagnik120/SHIKSHAK-AI.git
 cd SHIKSHAK-AI
 ```
 
-### 2. Set up the Python backend
+**3️⃣ Create and activate a Python virtual environment**
 ```bash
-python -m venv .venv
-
-# macOS / Linux
+python3.11 -m venv .venv
 source .venv/bin/activate
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
-
-pip install --upgrade pip
-pip install -r requirements.txt        # full install (RAG models, media)
-# or: pip install -r requirements-lite.txt   # lighter install for low-resource machines
 ```
+✅ Check: your prompt now starts with `(.venv)`.
 
-Optional: pre-download the embedding and reranker models.
+**4️⃣ Install the backend dependencies**
 ```bash
-python scripts/setup_and_download_models.py
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
+> Low on memory or disk? Use `pip install -r requirements-lite.txt` instead.
 
-### 3. Configure environment variables
+**5️⃣ Create your environment file**
 ```bash
-# macOS / Linux
 cp .env.example .env
-# Windows
-Copy-Item .env.example .env
+```
+Open `.env` and (optionally) set `GEMINI_API_KEY`. See [🔧 Environment variables](#-environment-variables).
+
+**6️⃣ Install the frontend dependencies**
+```bash
+cd FRONTEND && pnpm install && cd ..
+```
+✅ Done. Continue to [🚀 How to run](#-how-to-run-the-project).
+
+</details>
+
+<details>
+<summary><h3>🐧 Linux (Ubuntu / Debian)</h3></summary>
+
+**1️⃣ Install the tools** (skip any you already have)
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip git ffmpeg libfribidi0 libraqm0 curl
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+sudo npm install -g pnpm
+```
+> On **Fedora**, use `sudo dnf install python3 python3-pip git nodejs fribidi` (FFmpeg is optional: a bundled copy is used if it's missing).
+
+✅ Check: `python3 --version` shows 3.10 or newer, and `node --version` and `pnpm --version` print a version.
+
+**2️⃣ Get the code**
+```bash
+git clone https://github.com/Sagnik120/SHIKSHAK-AI.git
+cd SHIKSHAK-AI
 ```
 
-Edit `.env` and set at least:
+**3️⃣ Create and activate a Python virtual environment**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+✅ Check: your prompt now starts with `(.venv)`.
 
-| Variable | Required | Description |
-| :--- | :---: | :--- |
-| `GEMINI_API_KEY` | ✅ | Your Google Gemini API key |
-| `GEMINI_MODEL` | — | Defaults to `gemini-3.5-flash-lite` |
-| `SECRET_KEY` | ✅ | Any long random string (used to sign JWTs) |
-| `DATABASE_URL` | — | Defaults to `sqlite:///data/shikshak.db` |
-| `SMTP_*` / `RESEND_API_KEY` | — | Email for OTPs. If left blank with `EMAIL_DEV_FALLBACK=true`, OTP codes are returned in the API response (`dev_otp`) for local testing |
-| `CHROMA_PERSIST_DIR` | — | Vector store location (default `chroma_db`) |
+**4️⃣ Install the backend dependencies**
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+> Low on memory or disk? Use `pip install -r requirements-lite.txt` instead.
 
-Generate a secret key:
+**5️⃣ Create your environment file**
+```bash
+cp .env.example .env
+```
+Open `.env` and (optionally) set `GEMINI_API_KEY`. See [🔧 Environment variables](#-environment-variables).
+
+**6️⃣ Install the frontend dependencies**
+```bash
+cd FRONTEND && pnpm install && cd ..
+```
+✅ Done. Continue to [🚀 How to run](#-how-to-run-the-project).
+
+</details>
+
+### 🧰 Optional extras (all operating systems)
+
+| What | Command | When to use it |
+| :--- | :--- | :--- |
+| ⬇️ Pre-download embedding & reranker models | `python scripts/setup_and_download_models.py` | Makes the first document lesson faster |
+| 🩺 Check your setup | `python scripts/preflight_check.py` | Verifies keys, models and folders before a demo |
+| 🔗 Point the frontend at another backend | create `FRONTEND/.env.local` with `NEXT_PUBLIC_BACKEND_URL=http://localhost:8000` | Backend on a different host or port |
+
+### 🔧 Environment variables
+
+Everything has a working default, so **the app runs with an untouched `.env`**. These are the ones worth knowing:
+
+| Variable | Default | What it does |
+| :--- | :--- | :--- |
+| `GEMINI_API_KEY` | *(empty)* | 🔑 Live AI teaching. Empty = built-in offline teacher |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Which Gemini model to use |
+| `SECRET_KEY` | *(auto-generated)* | Signs login tokens. If empty, one is generated and saved to `data/.secret_key` |
+| `EMAIL_DEV_FALLBACK` | `true` | Shows OTP codes on screen instead of emailing them (local use) |
+| `SMTP_*` / `RESEND_API_KEY` | *(empty)* | Real email delivery for OTPs |
+| `DATABASE_URL` | `sqlite:///data/shikshak.db` | Database location |
+| `CHROMA_PERSIST_DIR` | `chroma_db` | Vector store location |
+| `CORS_ORIGINS` | *(local dev origins)* | Extra frontend origins allowed to call the API |
+| `AVATAR_STYLE` | `illustrated` | Set to `classic` for the original simple avatar |
+
+Generate a strong secret key (any OS):
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(48))"
-```
-
-### 4. Set up the Next.js frontend
-```bash
-cd FRONTEND
-pnpm install
-cd ..
-```
-The frontend reaches the backend at `http://localhost:8000` by default. To point it elsewhere, create `FRONTEND/.env.local`:
-```bash
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
-```
-
-### 5. (Optional) Verify your setup
-```bash
-python scripts/preflight_check.py
 ```
 
 ---
 
 ## 🚀 How to Run the Project
 
-### Option A: Full stack (recommended)
+### 🅰️ Option A · Full stack (recommended)
 
-Use **two terminals**.
+Use **two terminals**, both opened in the `SHIKSHAK-AI` folder.
 
-**Terminal 1: backend (FastAPI)**
+| | 🍎 macOS / 🐧 Linux | 🪟 Windows (PowerShell) |
+| :--- | :--- | :--- |
+| **Terminal 1: backend** | `source .venv/bin/activate`<br/>`python scripts/run_server.py` | `.\.venv\Scripts\Activate.ps1`<br/>`python scripts\run_server.py` |
+| **Terminal 2: frontend** | `cd FRONTEND`<br/>`pnpm dev` | `cd FRONTEND`<br/>`pnpm dev` |
+
+When both are up:
+
+| | Address |
+| :--- | :--- |
+| 🖥️ **App** | **http://localhost:3000** |
+| ⚙️ API | http://localhost:8000 |
+| 📖 Interactive API docs | http://localhost:8000/docs |
+
+> [!NOTE]
+> The backend prints a short **preflight summary** on start (database, email, LLM, Hindi text shaping), so you can confirm everything at a glance.
+
+### 🅱️ Option B · Backend with the legacy UI only
 ```bash
-source .venv/bin/activate
 python scripts/run_server.py
-# or: uvicorn modules.backend.src.main:app --reload --port 8000
 ```
-➡️ API at **http://localhost:8000** · interactive docs at **http://localhost:8000/docs**
+➡️ Open **http://localhost:8000**: the backend also serves the original static frontend from `modules/frontend`.
 
-**Terminal 2: frontend (Next.js)**
+### 🅲 Option C · Docker (any OS)
 ```bash
-cd FRONTEND
-pnpm dev
-```
-➡️ Open **http://localhost:3000** 🎉
-
-### Option B: Backend + legacy static UI only
-```bash
-python scripts/run_server.py
-```
-➡️ Open **http://localhost:8000** (the backend serves the static frontend in `modules/frontend`).
-
-### Option C: Docker
-```bash
-cp .env.example .env     # add GEMINI_API_KEY and SECRET_KEY
+cp .env.example .env            # Windows: Copy-Item .env.example .env
 docker compose up --build
 ```
 ➡️ Open **http://localhost:8000**. Accounts, lessons and the vector store persist in Docker volumes.
 
-### Production build of the frontend
+### 🏭 Production build of the frontend
 ```bash
 cd FRONTEND
-pnpm build && pnpm start
+pnpm build
+pnpm start
 ```
 
-### 🧪 Running tests
+### 🔑 Demo accounts
+
+These are created automatically on first start:
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| 👩‍🎓 Learner | `demo@shikshak.ai` | `DemoStudent@123` |
+| 👨‍🏫 Mentor | `teacher@shikshak.ai` | `DemoStudent@123` |
+| 🛡️ Admin | `admin@shikshak.ai` | `DemoStudent@123` |
+
+> Change the shared password with `DEFAULT_DEMO_PASSWORD`, or turn seeding off with `SEED_DEFAULT_USERS=false`.
+
+---
+
+## 🧭 Try it in 2 minutes (judge walkthrough)
+
+| # | Do this | What it shows |
+| :---: | :--- | :--- |
+| 1️⃣ | Log in as `demo@shikshak.ai` | The home page asks **"How do you want to learn?"** |
+| 2️⃣ | Choose **🎓 Learn AI from zero**, or open **Learning path** and type a topic | A personal route with a reason for every step |
+| 3️⃣ | Take the **📝 placement check** (≈6 questions) | Concepts you know are skipped; your starting level is set |
+| 4️⃣ | Click **Continue** on the next step | The classroom: avatar video, visual boards, a **●●●○○ difficulty meter** |
+| 5️⃣ | Answer a checkpoint **wrong on purpose** | The lesson re-explains more simply; open the **💡 Why?** tab to see the reason |
+| 6️⃣ | Answer two **right in a row** | *"Stepping up"*: the next part goes deeper |
+| 7️⃣ | Finish and open the **📊 Report** | Strengths, gaps, the Why? log, and **Continue** to the next step on your route |
+| 8️⃣ | Open **🔬 Practice Lab** | Predict → run → see why: gradient descent, overfitting, attention |
+| 9️⃣ | On a lesson's **Practice** page, click **Fresh practice** | New questions aimed at your weak spots, at your level |
+| 🔟 | Type a brand-new AI topic in the skill-map search | The map **grows a new branch** under its prerequisites |
+
+> [!TIP]
+> **Show spaced review instantly.** Reviews are normally due 2 days after mastering a concept. To make them due now:
+> ```bash
+> python scripts/make_reviews_due.py demo@shikshak.ai
+> ```
+> Refresh the home page and a **🔄 Time to refresh** card appears.
+
+📦 Want to test grounded lessons? Upload a file from [`demo_data/demo_documnet/`](demo_data/demo_documnet/). Its README lists the made-up details that prove the lesson came from your document.
+
+---
+
+## 🧪 Testing
+
 ```bash
-pytest                       # all suites
-pytest tests/unit            # fast unit tests
-pytest tests/integration     # cross-module tests
-python scripts/e2e_full_pipeline.py   # full ingestion → lesson → evaluation pipeline
+pytest modules/backend/tests modules/ai_agent_orchestration/tests   # backend + agents
+pytest tests/unit                                                    # fast unit tests
+pytest tests/integration                                             # cross-module tests
+python scripts/e2e_full_pipeline.py                                  # full ingest → lesson → evaluation run
+```
+```bash
+cd FRONTEND
+pnpm exec tsc --noEmit        # type-check the frontend
+pnpm lint                     # lint
 ```
 
-### 🧭 Try it in 2 minutes (judge walkthrough)
-1. **Sign up** at `http://localhost:3000` and verify with the OTP (shown on screen in dev mode).
-2. Open **Learning path** and choose **"Learn AI from zero"**, or pick any topic on the skill map.
-3. Optionally take the **placement check** to skip concepts you already know.
-4. Click **Start** on the next step to enter the **Classroom**. Watch the avatar explain with voice and visual boards.
-5. Answer a checkpoint question **incorrectly** on purpose and watch the lesson **adapt** in real time.
-6. Finish the lesson and open the **Report** for a diagnosis of your strengths, gaps and misconceptions.
-7. Explore the **Practice Lab** and **Refresh** (spaced review).
+---
 
-### 🩺 Troubleshooting
-| Issue | Fix |
+## 🩺 Troubleshooting
+
+| Symptom | 🪟 Windows | 🍎 macOS | 🐧 Linux |
+| :--- | :--- | :--- | :--- |
+| `python` / `node` not found | Reopen PowerShell after installing; use `py` instead of `python` | Use `python3.11`; check `brew doctor` | Use `python3`; reopen the terminal |
+| Can't activate `.venv` | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` | `source .venv/bin/activate` | `source .venv/bin/activate` |
+| Hindi on video boards looks jumbled | Usually fine with the standard Pillow wheel | `brew install fribidi`, start via `scripts/run_server.py` | `sudo apt install libfribidi0 libraqm0` |
+| `ffmpeg not found` (warning) | `winget install Gyan.FFmpeg` (optional) | `brew install ffmpeg` (optional) | `sudo apt install ffmpeg` (optional) |
+
+| Symptom (any OS) | Fix |
 | :--- | :--- |
-| `ffmpeg not found` | Install FFmpeg and add it to `PATH` (`brew install ffmpeg` / `choco install ffmpeg` / `apt install ffmpeg`) |
-| Frontend can't reach the API | Make sure the backend is on port 8000, or set `NEXT_PUBLIC_BACKEND_URL` |
-| Slow first lesson | The embedding models download on first run. Run `scripts/setup_and_download_models.py` beforehand |
-| No OTP email | Set `EMAIL_DEV_FALLBACK=true` for local use; the code appears in the response/UI |
-| Low memory | Use `requirements-lite.txt` |
+| 🔌 Frontend shows a network error | Make sure the backend is running on port 8000, or set `NEXT_PUBLIC_BACKEND_URL` |
+| 🆕 New features don't appear after pulling | Restart the backend (new database columns are added on start), then hard-refresh the browser (`Ctrl/Cmd + Shift + R`) |
+| 🐢 First document lesson is slow | Embedding models download on first use; run `python scripts/setup_and_download_models.py` beforehand |
+| ✉️ No OTP email | Keep `EMAIL_DEV_FALLBACK=true`: the code is shown on screen |
+| 💾 Low memory | Install with `requirements-lite.txt` |
+| 🤖 Answers feel generic | Set `GEMINI_API_KEY`; without it the offline teacher is used |
 
 ---
 
 ## 🎥 Demo
 
-### 🎥 Demo video & materials
-**[▶️ Watch the demo video and materials on Google Drive](https://drive.google.com/drive/folders/1ibsr1tZanhtruCBbIwiGkAy0mXx35XLY?usp=drive_link)** · **[🌐 Live demo](https://shikshak-ai.onrender.com/)**
+<div align="center">
+
+**[▶️ Watch the demo video & materials](https://drive.google.com/drive/folders/1ibsr1tZanhtruCBbIwiGkAy0mXx35XLY?usp=drive_link)** · **[🌐 Open the live demo](https://shikshak-ai.onrender.com/)**
+
+</div>
 
 ---
 
-## 📖 Further Documentation
-- [Deployment guide](docs/DEPLOYMENT.md)
-- [CBSE AI curriculum alignment](docs/CBSE_AI_CURRICULUM_GUIDE.md)
-- [Frontend README](FRONTEND/README.md)
-- [Scripts reference](scripts/README.md)
-- [Specifications](docs/spec/) · [System docs](docs/system/)
+## 📚 Further Documentation
+
+| | Document |
+| :---: | :--- |
+| 🚢 | [Deployment guide](docs/DEPLOYMENT.md) |
+| 🎓 | [CBSE AI curriculum alignment](docs/CBSE_AI_CURRICULUM_GUIDE.md) |
+| 🖥️ | [Frontend README](FRONTEND/README.md) |
+| 🛠️ | [Scripts reference](scripts/README.md) |
+| 📐 | [Specifications](docs/spec/) · [System docs](docs/system/) |
 
 ---
 
 ## 👥 Team
 
-| Name | GitHub |
-| :--- | :--- |
-| **Sagnik Chandra** | [@Sagnik120](https://github.com/Sagnik120) |
-| **Shrusti Jain** | [@svj31](https://github.com/svj31) |
+| | Name | GitHub |
+| :---: | :--- | :--- |
+| 👨‍💻 | **Sagnik Chandra** | [@Sagnik120](https://github.com/Sagnik120) |
+| 👩‍💻 | **Shrusti Jain** | [@svj31](https://github.com/svj31) |
 
 <div align="center">
 
-**Made with ❤️ for learners everywhere · शिक्षा सबके लिए**
+<br/>
+
+**Made with ❤️ for every AI learner · शिक्षा सबके लिए**
 
 </div>
