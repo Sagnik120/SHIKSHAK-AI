@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, setSessionExpiredHandler, tokens } from "@/core/api";
 import type { TokenResponse, User } from "@/core/types";
 
@@ -28,18 +29,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const ready = access !== null;
   const signedIn = Boolean(access);
   const [user, setUserState] = useState<User | null>(null);
+  // Cached queries belong to whoever was signed in; drop them whenever that
+  // changes so the next user never sees the previous one's data.
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (signedIn) setUserState(tokens.user);
-    else if (ready) setUserState(null);
-  }, [signedIn, ready]);
+    else if (ready) { setUserState(null); qc.clear(); }
+  }, [signedIn, ready, qc]);
 
   useEffect(() => {
     setSessionExpiredHandler(() => {
+      qc.clear();
       const here = window.location.pathname + window.location.search;
       router.replace(`/login?next=${encodeURIComponent(here)}`);
     });
-  }, [router]);
+  }, [router, qc]);
 
   const refreshUser = useCallback(async () => {
     if (!tokens.isSignedIn) return null;
@@ -63,11 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signedIn,
       user,
       signIn: (data) => {
+        qc.clear();
         tokens.save(data);
         setUserState(data.user);
       },
       signOut: async () => {
         await api.logout();
+        qc.clear();
         setUserState(null);
         router.replace("/");
       },
@@ -77,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       refreshUser,
     }),
-    [ready, signedIn, user, router, refreshUser]
+    [ready, signedIn, user, router, refreshUser, qc]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
