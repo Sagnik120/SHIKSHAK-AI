@@ -41,6 +41,17 @@ class CreateLessonRequest(BaseModel):
     language: str = Field(default="en", max_length=10)
     time_budget_min: int = Field(default=15, ge=5, le=120)
     style: Optional[str] = Field(default=None, max_length=40)
+    skill_concept_id: Optional[str] = Field(default=None, max_length=80)
+    skill_goal_id: Optional[str] = Field(default=None, max_length=80)
+
+
+def _skill_tags(payload: CreateLessonRequest) -> dict:
+    from modules.backend.src.services import skill_map
+
+    graph = skill_map.concepts()
+    concept = payload.skill_concept_id if payload.skill_concept_id in graph else None
+    goal = payload.skill_goal_id if skill_map.valid_goal(payload.skill_goal_id, graph) else None
+    return {"skill_concept_id": concept, "skill_goal_id": goal if concept else None}
 
 
 def _owned_lesson(db: Session, lesson_id: str, user: User) -> Lesson:
