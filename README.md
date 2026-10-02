@@ -82,8 +82,8 @@ There is a critical need for an automated system that bridges this gap: an educa
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Sagnik120/Shikshak_AI.git
-   cd Shikshak_AI
+   git clone https://github.com/Sagnik120/SHIKSHAK-AI.git
+   cd SHIKSHAK-AI
    ```
 
 2. **Environment configuration:**
