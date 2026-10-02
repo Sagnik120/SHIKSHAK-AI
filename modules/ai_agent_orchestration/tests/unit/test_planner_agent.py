@@ -29,8 +29,8 @@ def test_planner_time_budget_variants():
     
     c1 = LearnerConstraints(level="beginner", language="English", time_budget_min=5, style="visual")
     planner.plan_lesson(constraints=c1, source_type="topic", topic="Gravity")
-    assert '"time_budget_min": 5' in adapter.calls[0][1]["content"]
+    assert '"time_budget_min":5' in adapter.calls[0][1]["content"]
     
     c2 = LearnerConstraints(level="beginner", language="English", time_budget_min="multi_day_plan", style="visual")
     planner.plan_lesson(constraints=c2, source_type="topic", topic="Gravity")
-    assert '"time_budget_min": "multi_day_plan"' in adapter.calls[1][1]["content"]
+    assert '"time_budget_min":"multi_day_plan"' in adapter.calls[1][1]["content"]
