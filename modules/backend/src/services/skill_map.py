@@ -208,3 +208,63 @@ def mastery(db: Session, user_id: str, graph: dict) -> dict[str, dict]:
     # A failed spaced review reopens a mastered concept until a newer lesson masters it again.
     from modules.backend.src.services.review_service import lapsed_since
 
+    reviews = (user.review_json if user else None) or {}
+    for cid, m in out.items():
+        if m["state"] == "mastered" and lapsed_since(reviews.get(cid), m.get("learned_at")):
+            m["state"], m["lapsed"] = "practice", True
+    # Placement marks a concept known only where no lesson has said otherwise:
+    # real lesson results always win.
+    for cid in placed:
+        if cid in graph and cid not in out:
+            placed_at = (user.placement_json or {}).get("at")
+            lapsed = lapsed_since(reviews.get(cid), placed_at)
+            out[cid] = {"score": None, "attempts": 0, "lesson_id": None, "lesson_status": None,
+                        "state": "practice" if lapsed else "mastered", "source": "placement",
+                        "learned_at": placed_at, **({"lapsed": True} if lapsed else {})}
+    return out
+
+
+COURSE = "__all__"          # goal: the whole map, foundations to frontier
+TRACK_PREFIX = "__track_"   # goal: one track, complete (e.g. "__track_dl")
+
+
+def valid_goal(goal: Optional[str], graph: dict) -> bool:
+    if not goal:
+        return False
+    if goal == COURSE:
+        return True
+    if goal.startswith(TRACK_PREFIX):
+        return goal[len(TRACK_PREFIX):] in _TRACK_IDS
+    return goal in graph
+
+
+def goal_title(goal: str, graph: dict) -> str:
+    if goal == COURSE:
+        return "AI from zero to frontier"
+    if goal.startswith(TRACK_PREFIX):
+        return dict(TRACKS)[goal[len(TRACK_PREFIX):]] + " (complete track)"
+    return graph[goal]["title"]
+
+
+def _depth(graph: dict) -> dict[str, int]:
+    """Longest prerequisite chain under each concept (0 = no prerequisites)."""
+    memo: dict[str, int] = {}
+
+    def d(cid: str, stack: frozenset) -> int:
+        if cid not in memo:
+            pre = [p for p in graph[cid]["prereqs"] if p in graph and p not in stack]
+            memo[cid] = 1 + max((d(p, stack | {cid}) for p in pre), default=-1)
+        return memo[cid]
+
+    for cid in graph:
+        d(cid, frozenset())
+    return memo
+
+
+def targets(goal: str, graph: dict) -> list[str]:
+    """Concepts a goal asks for. Course/track goals are ordered shallow-first
+    across tracks, so a beginner meets foundations before depth."""
+    if goal == COURSE:
+        ids = list(graph)
+    elif goal.startswith(TRACK_PREFIX):
+        ids = [c for c in graph if graph[c]["track"] == goal[len(TRACK_PREFIX):]]
