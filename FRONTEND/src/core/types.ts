@@ -211,7 +211,6 @@ export interface PracticeQuestion {
   generated?: boolean;
   difficulty?: number | null;
   target?: string | null;
-  needs_practice: boolean;
   last_practice: { correct: boolean; answer: string; answered_at: string } | null;
 }
 export interface PracticeSet { lesson_id: string; title: string; questions: PracticeQuestion[] }
@@ -354,7 +353,6 @@ export interface Journey {
   months: Array<{ month: string; active_days: number; earned: boolean; needed: number }>;
 }
 
-
 export interface SkillConcept {
   id: string;
   title: string;
@@ -393,3 +391,14 @@ export interface SkillMap {
   mastered_count: number;
 }
 
+export interface WhyEntry {
+  at: string | null;
+  kind: string;
+  node_id: string | null;
+  concept: string | null;
+  params: Record<string, unknown> & { [k: string]: any };
+}
+
+export interface ReviewDue { id: string; title: string; lesson_id: string; days_since: number; overdue_days: number; interval: number; in_progress: boolean }
+export interface ReviewSet { id: string; title: string; questions: Array<{ id: string; question_text: string; type: string; options: string[]; answered: boolean }> }
+export interface ReviewResult { correct: boolean; feedback_text: string; model_answer: string; finished: boolean; passed?: boolean; next_in_days?: number }
