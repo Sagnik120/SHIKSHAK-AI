@@ -73,3 +73,13 @@ def set_skill_goal(body: GoalBody, user: User = Depends(get_current_user), db: S
     db.commit()
     return skill_map.snapshot(db, user.id, body.goal)
 
+
+@router.post("/skill-map/concepts")
+def add_skill_concept(body: NewConcept, user: User = Depends(get_current_user)):
+    """Place a new AI topic on the shared map (LLM-assisted)."""
+    try:
+        return skill_map.add_concept(body.topic)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
