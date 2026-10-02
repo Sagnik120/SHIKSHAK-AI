@@ -75,7 +75,7 @@ class SessionManager:
         positions = orchestrator.checkpoint_positions(getattr(segment, "script_text", "") or "")
         if not positions:
             return []
-        questions = orchestrator.generate_checkpoints(lesson.id, node, segment, positions)
+        questions = orchestrator.generate_checkpoints(lesson.id, node, segment, positions, difficulty=lesson.difficulty)
         return list(zip(positions, questions))
 
     @staticmethod
@@ -133,6 +133,7 @@ class SessionManager:
             language=lesson.language,
             time_budget_min=lesson.time_budget_min,
             style=lesson.style,
+            difficulty=lesson.difficulty,
         )
 
     def _fresh_session(self, lesson: Lesson, document_outline: Optional[dict] = None, db=None):
