@@ -388,6 +388,19 @@ def _serve_owned_media(stored_path: Optional[str], lesson_id: str, media_type: s
     return FileResponse(path, media_type=media_type, filename=path.name)
 
 
+@router.get("/{lesson_id}/why")
+def get_lesson_why(
+    lesson_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db, scope="function"),
+):
+    """Every adaptive decision in this lesson, as structured entries for the "Why?" log."""
+    from modules.backend.src.services import why_log
+
+    lesson = _owned_lesson(db, lesson_id, user)
+    return {"lesson_id": lesson.id, "entries": why_log.build(db, lesson)}
+
+
 @router.get("/{lesson_id}/trace")
 def get_lesson_trace(
     lesson_id: str,
