@@ -29,3 +29,23 @@ These details are **made up** for this chapter. A model can't know them from gen
 | **Greenfield Public School, Pune** | title, page 1 |
 
 **Negative check:** start a lesson with the same PDF but the topic *"Photosynthesis"*. The document doesn't cover it, so the classroom should say **"No matching document context — teaching this concept from general knowledge"** and show no citation.
+
+---
+
+# AI demo document (matches the "Learning AI" problem statement)
+
+**Files:** `AI_Unit2_How_Machines_Learn.pdf` (3 pages) and `.docx`, which have the same content: 6 sections (2.1–2.6) plus a revision list.
+
+**Test:** New lesson → upload the PDF → topic empty (or "How machines learn"). Concepts should follow: features & labels, loss, gradient descent, overfitting, neural networks, attention.
+
+| Look for (made-up, so it proves grounding) | Where |
+|---|---|
+| **Meera's** mango dataset, **240 mangoes**, colour score **1–10** | 2.1, page 1 |
+| **Kiran's** flat in **Indiranagar**, predicted **Rs 82 lakh**, sold **Rs 90 lakh** → squared error **64** | 2.2, page 1 |
+| **Arjun** on **Nandi Hills** in fog; weight **4.0**, gradient **2.5**, LR **0.2** → **3.5** | 2.3, page 2 |
+| **MangoNet-7**: **99%** train vs **61%** test; **Tanvi** memorising papers | 2.4, page 2 |
+| Inputs **(2, 1, 3)**, weights **(0.5, −1, 0.25)**, bias **0.5** → **1.25** | 2.5, page 3 |
+| "bank" pays **0.71** attention to **"Kaveri"** | 2.6, page 3 |
+| **Brightpath AI Academy, Bengaluru** | title, page 1 |
+
+**Negative check:** same PDF, topic *"Reinforcement learning"*. It isn't covered, so the lesson should say no matching document context and show no citation.
