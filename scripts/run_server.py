@@ -9,6 +9,18 @@ import os
 import sys
 from pathlib import Path
 
+# macOS: Pillow shapes Hindi (matras, conjuncts) only when it can load
+# libfribidi, which Homebrew installs outside the default library path. The
+# path must be set before Python starts, so re-launch once with it.
+_BREW_LIB = "/opt/homebrew/lib" if os.path.isdir("/opt/homebrew/lib") else "/usr/local/lib"
+if (
+    sys.platform == "darwin"
+    and os.path.exists(os.path.join(_BREW_LIB, "libfribidi.0.dylib"))
+    and _BREW_LIB not in os.environ.get("DYLD_LIBRARY_PATH", "").split(":")
+):
+    os.environ["DYLD_LIBRARY_PATH"] = ":".join(p for p in (_BREW_LIB, os.environ.get("DYLD_LIBRARY_PATH")) if p)
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -25,6 +37,13 @@ def preflight() -> None:
         print("  Email           NOT CONFIGURED — codes go to data/outbox/ and the API response")
         if settings.environment == "production":
             print("                  ^ set SMTP_USER and SMTP_PASSWORD before going live")
+
+    try:
+        from PIL import features
+        shaped = features.check("raqm")
+    except Exception:
+        shaped = False
+    print("  Hindi boards    " + ("shaped (raqm)" if shaped else "NOT SHAPED — install fribidi (brew install fribidi / apt libfribidi0)"))
 
     if os.getenv("GEMINI_API_KEY", "").strip():
         print("  LLM             Gemini (live)")
