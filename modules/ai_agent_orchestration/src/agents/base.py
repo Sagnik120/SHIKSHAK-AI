@@ -18,11 +18,7 @@ class BaseAgent:
 
     def load_prompt(self, filename: str) -> str:
         """Load a system prompt template from the prompts directory."""
-        prompt_path = self.prompts_dir / filename
-        if not prompt_path.exists():
-            raise FileNotFoundError(f"Prompt file not found: {prompt_path}")
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read()
+        return _read_prompt(str(self.prompts_dir / filename))
 
     def call_llm_json(
         self,
@@ -66,3 +62,11 @@ class BaseAgent:
                     })
                     
         raise ValueError(f"Failed to get valid JSON from LLM after {max_retries} retries. Last error: {last_error}")
+
+
+@lru_cache(maxsize=None)
+def _read_prompt(path: str) -> str:
+    prompt_path = Path(path)
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"Prompt file not found: {prompt_path}")
+    return prompt_path.read_text(encoding="utf-8")
