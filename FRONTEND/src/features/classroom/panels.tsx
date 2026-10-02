@@ -39,16 +39,16 @@ export function StudyPanel({ s, lessonId }: { s: ClassroomState; lessonId: strin
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-[26px] border border-line bg-surface shadow-[var(--shadow-soft)]">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-[var(--shadow-soft)]">
       <div className="p-3">
-        <Tabs<Tab> value={tab} onChange={setTab} items={[
-          { value: "notes", label: <><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">{t("class.tabs.notes")}</span></> },
-          { value: "transcript", label: <><ScrollText className="h-4 w-4" /><span className="hidden sm:inline">{t("class.tabs.transcript")}</span></> },
-          { value: "questions", label: <><MessageSquareText className="h-4 w-4" /><span className="hidden sm:inline">{t("class.tabs.questions")}</span></>, badge: s.qa.length ? <span className="rounded-full bg-sky-100 px-1.5 text-[0.65rem] text-sky-700">{n(answered)}</span> : undefined },
-          { value: "source", label: <><FileText className="h-4 w-4" /><span className="hidden sm:inline">{t("class.tabs.source")}</span></> },
+        <Tabs<Tab> value={tab} onChange={setTab} className="[&>button]:min-w-0 [&>button]:px-1.5" items={[
+          { value: "notes", label: <><BookOpen className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.notes")}</span></> },
+          { value: "transcript", label: <><ScrollText className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.transcript")}</span></> },
+          { value: "questions", label: <><MessageSquareText className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.questions")}</span></>, badge: s.qa.length ? <span className="rounded-full bg-sky-100 px-1.5 text-[0.65rem] text-sky-700">{n(answered)}</span> : undefined },
+          { value: "source", label: <><FileText className="h-4 w-4 shrink-0" /><span className="hidden min-w-0 truncate sm:block">{t("class.tabs.source")}</span></> },
         ]} />
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5" data-lenis-prevent>
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-5" data-lenis-prevent>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
             {tab === "notes" && <NotesTab s={s} />}
@@ -170,12 +170,12 @@ function SourceTab({ s }: { s: ClassroomState }) {
   return (
     <div>
       <Badge tone={weak ? "amber" : "sage"} dot>{t(weak ? "class.loose" : "class.grounded")}</Badge>
-      <p className="mt-3 font-semibold text-ink">{c.source_title}{where ? ` — ${where}` : ""}</p>
-      <blockquote className="mt-3 rounded-2xl border-l-4 border-sky-300 bg-sky-50/60 px-4 py-3 leading-relaxed text-ink-2">
+      <p className="mt-3 break-words font-semibold text-ink [overflow-wrap:anywhere]">{c.source_title}{where ? ` — ${where}` : ""}</p>
+      <blockquote className="mt-3 rounded-2xl border-l-4 border-sky-300 bg-sky-50/60 px-4 py-3 leading-relaxed text-ink-2 break-words [overflow-wrap:anywhere]">
         <span className="highlight">{c.excerpt}</span>
       </blockquote>
       {c.chunk_count ? <p className="mt-3 text-xs text-ink-3">{t("class.passages", { n: n(c.chunk_count) })}</p> : null}
-      {(c.attempts ?? 0) > 1 && <p className="mt-1 text-xs text-ink-3">{t("class.refined", { q: c.refined_query || "" })}</p>}
+      {(c.attempts ?? 0) > 1 && <p className="mt-1 break-words text-xs text-ink-3 [overflow-wrap:anywhere]">{t("class.refined", { q: c.refined_query  || "" })}</p>}
     </div>
   );
 }
