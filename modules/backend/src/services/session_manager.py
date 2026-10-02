@@ -162,7 +162,10 @@ class SessionManager:
 
         profile = db.get(LearnerProfileRow, lesson.user_id)
         if profile is None:
-            return None
+            if not getattr(lesson, "skill_concept_id", None):
+                return None
+            from types import SimpleNamespace  # first lesson on a route: empty history, not a DB row
+            profile = SimpleNamespace(misconception_counts={}, strong_concepts=[], weak_concepts=[], lessons_completed=0)
 
         # Only tags seen more than once are "recurring" — a single slip should
         # not bias every future lesson.
@@ -179,8 +182,20 @@ class SessionManager:
             "lessons_completed": profile.lessons_completed,
         }
 
+        # A lesson started from the skill map is one step on a route; the
+        # planner uses this to skip, recap and bridge (prompt rule 6).
+        if getattr(lesson, "skill_concept_id", None) and db is not None:
+            try:
+                from modules.backend.src.services import skill_map
+
+                path = skill_map.path_context(db, lesson.user_id, lesson.skill_concept_id, lesson.skill_goal_id)
+                if path:
+                    memory["learning_path"] = path
+            except Exception:  # path context is a bonus; never block planning
+                pass
+
         # Nothing learned yet: treat as no memory rather than sending empty lists.
-        if not any([memory["strong_concepts"], memory["weak_concepts"], recurring]):
+        if not any([memory["strong_concepts"], memory["weak_concepts"], recurring, memory.get("learning_path")]):
             return None
         return memory
 
