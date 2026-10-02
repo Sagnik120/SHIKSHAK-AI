@@ -428,3 +428,38 @@ def snapshot(db: Session, user_id: str, goal: Optional[str]) -> dict:
         # progress toward the goal: concepts in its full scope, and how many are mastered
         "scope_total": len(scope),
         "scope_done": sum(1 for c in scope if m.get(c, {}).get("state") == "mastered"),
+        "mastered_count": sum(1 for v in m.values() if v["state"] == "mastered"),
+    }
+
+
+def add_concept(topic: str) -> dict:
+    """Place a new AI topic on the map. LLM first; keyword heuristic as fallback."""
+    topic = re.sub(r"\s+", " ", (topic or "").strip())[:80]
+    if len(topic) < 2:
+        raise ValueError("Topic is too short.")
+    graph = concepts()
+    existing = match_concept(topic, graph)
+    if existing and graph[existing]["title"].lower() == topic.lower():
+        return graph[existing] | {"existing": True}
+
+    placed = _place_with_llm(topic, graph) or _place_heuristic(topic, graph)
+    cid = _slug(placed.get("title") or topic)
+    if cid in graph:
+        return graph[cid] | {"existing": True}
+    item = {
+        "id": cid, "title": placed.get("title") or topic, "track": placed.get("track", "frontier"),
+        "prereqs": [p for p in placed.get("prereqs", []) if p in graph][:4] or ["transformer"],
+        "keywords": [topic.lower()], "summary": placed.get("summary", ""),
+    }
+    with _LOCK:
+        items = _load_custom()
+        if not any(c["id"] == cid for c in items):
+            items.append(item)
+            _save_custom(items)
+    return concepts()[cid] | {"existing": False}
+
+
+def _place_with_llm(topic: str, graph: dict) -> Optional[dict]:
+    try:
+        from modules.ai_agent_orchestration.src.adapters.gemini_adapter import get_llm_adapter
+
