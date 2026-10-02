@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { useEffect } from "react";
-import { BookOpen, Gauge, Home, LogOut, Plus, Search, Shield, UserRound } from "lucide-react";
+import { BookOpen, FlaskConical, Gauge, Home, LogOut, Plus, Route, Search, Shield, UserRound } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Avatar } from "@/components/brand/avatar";
 import { LanguageToggle } from "./language-toggle";
@@ -18,6 +18,8 @@ import { LEARNER_ONLY, isStaff, tabsFor } from "@/lib/staff";
 const NAV: Array<{ href: string; key: MessageKey; icon: React.ReactNode }> = [
   { href: "/dashboard", key: "nav.dashboard", icon: <Home className="h-[18px] w-[18px]" /> },
   { href: "/new", key: "nav.newLesson", icon: <Plus className="h-[18px] w-[18px]" /> },
+  { href: "/path", key: "nav.path", icon: <Route className="h-[18px] w-[18px]" /> },
+  { href: "/lab", key: "nav.lab", icon: <FlaskConical className="h-[18px] w-[18px]" /> },
   { href: "/lessons", key: "nav.lessons", icon: <BookOpen className="h-[18px] w-[18px]" /> },
   { href: "/progress", key: "nav.progress", icon: <Gauge className="h-[18px] w-[18px]" /> },
   { href: "/profile", key: "nav.profile", icon: <UserRound className="h-[18px] w-[18px]" /> },
@@ -120,7 +122,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile tab bar with a raised "new lesson" button */}
       <nav className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-3xl border border-line bg-surface/95 px-2 py-2 shadow-[var(--shadow-lift)] backdrop-blur lg:hidden">
-        {(staff ? nav.filter((n) => n.href !== "/profile").slice(0, 5) : nav.filter((n) => n.href !== "/profile")).map((item) =>
+        {(staff ? nav.filter((n) => n.href !== "/profile").slice(0, 5) : nav.filter((n) => n.href !== "/profile" && n.href !== "/lab")).map((item) =>
           item.href === "/new" ? (
             <Link key={item.href} href={item.href} aria-label={t(item.key)} className="-mt-8 grid h-14 w-14 place-items-center rounded-2xl bg-sky-600 text-white shadow-[0_10px_24px_-8px_rgb(59_102_174/0.8)]">
               <Plus className="h-6 w-6" />
