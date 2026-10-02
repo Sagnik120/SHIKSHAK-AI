@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useDeferredValue, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import { FileText, Plus, Sparkles, Trash2 } from "lucide-react";
+import { FileText, Plus, Route, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/core/api";
 import type { Lesson, LessonStatus } from "@/core/types";
@@ -27,6 +27,8 @@ export default function LessonsPage() {
   const q = useQuery({ queryKey: ["lessons", "list", status, term], queryFn: () => api.listLessons({ status, search: term || undefined, limit: 100 }), placeholderData: keepPreviousData });
 
   const [pending, setPending] = useState<Lesson | null>(null);
+  const [kind, setKind] = useState<"all" | "path" | "free">("all");
+  const shown = (q.data?.lessons ?? []).filter((l) => kind === "all" || (kind === "path") === !!l.skill_goal_id);
   const del = (l: Lesson) => setPending(l);
   const closeConfirm = useCallback(() => setPending(null), []);
   const confirmDelete = async () => {
@@ -53,6 +55,9 @@ export default function LessonsPage() {
       <GlassSearch className="mt-8" value={search} onChange={setSearch} placeholder={t("lessons.search")} />
       <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
+          <button key={f} onClick={() => setStatus(f)}
+            className={cn("relative shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors", status === f ? "text-white" : "border border-line bg-surface text-ink-2 hover:text-ink")}>
+            {status === f && <motion.span layoutId="lesson-filter" className="absolute inset-0 -z-0 rounded-full bg-ink" transition={{ type: "spring", stiffness: 450, damping: 34 }} />}
           <button key={f} onClick={() => setStatus(f)}
             className={cn("relative shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors", status === f ? "text-white" : "border border-line bg-surface text-ink-2 hover:text-ink")}>
             {status === f && <motion.span layoutId="lesson-filter" className="absolute inset-0 -z-0 rounded-full bg-ink" transition={{ type: "spring", stiffness: 450, damping: 34 }} />}
