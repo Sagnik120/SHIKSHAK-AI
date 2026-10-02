@@ -98,4 +98,114 @@ const STORE = "shikshak.codeSolved";
 const readSolved = (): string[] => { try { return JSON.parse(localStorage.getItem(STORE) || "[]"); } catch { return []; } };
 const writeSolved = (v: string[]) => { try { localStorage.setItem(STORE, JSON.stringify(v)); } catch { /* storage blocked */ } };
 
+type Result = { state: "wait" | "run" | "pass" | "fail"; got?: string };
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/* ── UI ────────────────────────────────────────────────────────────────── */
+
+export function CodeChallenges({ onSolvedChange }: { onSolvedChange?: (n: number) => void }) {
+  const { lang } = useI18n();
+  const hi = lang === "hi";
+  const [solved, setSolved] = useState<string[]>([]);
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const s = readSolved();
+    setSolved(s);
+    const first = CHALLENGES.findIndex((c) => !s.includes(c.id));
+    setIdx(first < 0 ? 0 : first);
+  }, []);
+  useEffect(() => { onSolvedChange?.(solved.length); }, [solved, onSolvedChange]);
+
+  const markSolved = (id: string) => setSolved((s) => { const v = s.includes(id) ? s : [...s, id]; writeSolved(v); return v; });
+  const unlocked = (i: number) => i === 0 || solved.includes(CHALLENGES[i - 1].id) || solved.includes(CHALLENGES[i].id);
+
+  return (
+    <div className="grid items-start gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <ol className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+        {CHALLENGES.map((c, i) => {
+          const done = solved.includes(c.id), open = unlocked(i);
+          return (
+            <li key={c.id} className="shrink-0">
+              <button disabled={!open} onClick={() => setIdx(i)}
+                className={cn("flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors",
+                  i === idx ? "border-sky-400 bg-sky-50 shadow-[var(--shadow-soft)]" : "border-line bg-surface hover:border-sky-300", !open && "cursor-not-allowed opacity-50")}>
+                <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold",
+                  done ? "bg-sage text-white" : i === idx ? "bg-sky-600 text-white" : "bg-paper-3 text-ink-3")}>
+                  {done ? <Check className="h-3.5 w-3.5" /> : open ? i + 1 : <Lock className="h-3 w-3" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-ink">{hi ? c.hi : c.title}</span>
+                  <span className="block truncate text-xs text-ink-3">{c.concept}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <Editor key={CHALLENGES[idx].id} c={CHALLENGES[idx]} hi={hi} solved={solved.includes(CHALLENGES[idx].id)}
+        onPass={() => markSolved(CHALLENGES[idx].id)}
+        onNext={idx < CHALLENGES.length - 1 ? () => setIdx(idx + 1) : undefined} />
+    </div>
+  );
+}
+
+function Editor({ c, hi, solved, onPass, onNext }: { c: Challenge; hi: boolean; solved: boolean; onPass: () => void; onNext?: () => void }) {
+  const [code, setCode] = useState(c.blank);
+  const [results, setResults] = useState<Result[]>(c.tests.map(() => ({ state: "wait" })));
+  const [phase, setPhase] = useState<"idle" | "loading" | "running" | "pass" | "fail">("idle");
+  const [hint, setHint] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const ta = useRef<HTMLTextAreaElement>(null);
+
+  const lines = (s: string) => (s ? s.replace(/\n$/, "").split("\n") : []);
+  const pre = lines(c.prefix), post = lines(c.suffix);
+  const rows = Math.max(3, code.split("\n").length);
+
+  const run = async () => {
+    setErr(null);
+    setResults(c.tests.map(() => ({ state: "wait" })));
+    setPhase("loading");
+    let py: Py;
+    try { py = await loadPy(); py.runPython(HARNESS); } catch (e) { setErr((e as Error).message); setPhase("idle"); return; }
+    setPhase("running");
+    const src = c.prefix + code + (code.endsWith("\n") ? "" : "\n") + c.suffix;
+    const runOne = py.globals.get("_run") as (s: string, call: string, exp: string) => { toJs: () => [boolean, string]; destroy: () => void };
+    let all = true;
+    for (let i = 0; i < c.tests.length; i++) {
+      setResults((r) => r.map((x, j) => (j === i ? { state: "run" } : x)));
+      await sleep(380);
+      const out = runOne(src, c.tests[i].call, c.tests[i].expect);
+      const [ok, got] = out.toJs(); out.destroy();
+      all &&= ok;
+      setResults((r) => r.map((x, j) => (j === i ? { state: ok ? "pass" : "fail", got } : x)));
+    }
+    setPhase(all ? "pass" : "fail");
+    if (all) onPass();
+  };
+
+  const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const el = e.currentTarget, a = el.selectionStart, b = el.selectionEnd;
+      setCode(code.slice(0, a) + "    " + code.slice(b));
+      requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = a + 4; });
+    } else if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); void run(); }
+  };
+
+  const passed = results.filter((r) => r.state === "pass").length;
+  const busy = phase === "loading" || phase === "running";
+
+  return (
+    <div className="min-w-0 space-y-4">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">{c.concept}{solved && <span className="ml-2 text-sage">· {hi ? "हल किया" : "Solved"}</span>}</p>
+        <h3 className="mt-1 font-display text-3xl text-ink">{hi ? c.hi : c.title}</h3>
+        <p className="mt-1 text-sm text-ink-2">{c.brief}</p>
+      </div>
+
+      {/* editor: locked lines around an editable block */}
+      <div className="overflow-hidden rounded-2xl border border-[#1f2a37] bg-[#0f172a] font-mono text-[13px] leading-6 text-slate-200 shadow-[var(--shadow-lift)]">
+        <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" /><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+          <span className="ml-3 text-xs text-slate-400">{c.id}.py</span>
 }
