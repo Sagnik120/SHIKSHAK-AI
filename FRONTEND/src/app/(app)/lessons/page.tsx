@@ -58,22 +58,27 @@ export default function LessonsPage() {
           <button key={f} onClick={() => setStatus(f)}
             className={cn("relative shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors", status === f ? "text-white" : "border border-line bg-surface text-ink-2 hover:text-ink")}>
             {status === f && <motion.span layoutId="lesson-filter" className="absolute inset-0 -z-0 rounded-full bg-ink" transition={{ type: "spring", stiffness: 450, damping: 34 }} />}
-          <button key={f} onClick={() => setStatus(f)}
-            className={cn("relative shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors", status === f ? "text-white" : "border border-line bg-surface text-ink-2 hover:text-ink")}>
-            {status === f && <motion.span layoutId="lesson-filter" className="absolute inset-0 -z-0 rounded-full bg-ink" transition={{ type: "spring", stiffness: 450, damping: 34 }} />}
             <span className="relative">{f === "all" ? t("lessons.all") : t(`status.${f}` as "status.completed")}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 inline-flex rounded-xl border border-line bg-surface p-0.5 text-xs">
+        {(["all", "path", "free"] as const).map((k) => (
+          <button key={k} onClick={() => setKind(k)} className={cn("rounded-lg px-3 py-1", kind === k ? "bg-paper-3 font-medium text-ink" : "text-ink-3 hover:text-ink")}>
+            {lang === "hi" ? { all: "सभी", path: "रास्ते के पाठ", free: "मुक्त पाठ" }[k] : { all: "All lessons", path: "Path lessons", free: "Free lessons" }[k]}
           </button>
         ))}
       </div>
 
       {q.isLoading ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-48 rounded-[24px]" />)}</div>
-      ) : (q.data?.lessons.length ?? 0) === 0 ? (
+      ) : shown.length === 0 ? (
         <p className="py-20 text-center text-ink-3">{t("lessons.empty")}</p>
       ) : (
         <motion.div layout className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
-            {q.data!.lessons.map((l, i) => (
+            {shown.map((l, i) => (
               <motion.div key={l.id} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0, transition: { delay: Math.min(i, 8) * 0.03 } }} exit={{ opacity: 0, scale: 0.96 }}>
                 <article className="group relative flex h-full flex-col rounded-[24px] border border-line bg-surface p-5 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
                   <div className="flex items-start justify-between gap-3">
@@ -85,6 +90,7 @@ export default function LessonsPage() {
                     <Badge tone={STATUS_TONE[l.status]} dot>{t(`status.${l.status}` as "status.completed")}</Badge>
                     {l.to_review > 0 && <Badge tone="marigold">{t("status.toReview", { n: n(l.to_review) })}</Badge>}
                     {l.score_pct != null && l.status === "completed" && <Badge tone="sage">{n(Math.round(l.score_pct))}%</Badge>}
+                    {l.skill_goal_id && <Badge tone="sky"><Route className="h-3 w-3" />{lang === "hi" ? "रास्ते का कदम" : "Path step"}</Badge>}
                   </div>
                   <div className="mt-auto flex items-center justify-between pt-5 text-xs text-ink-3">
                     <span>{t("common.concepts", { n: n(l.node_count) })} · {relativeDays(l.updated_at, lang)}</span>
