@@ -205,6 +205,17 @@ class Lesson(Base, TimestampMixin):
     document_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("documents.id", ondelete="SET NULL"), index=True
     )
+    # Set when the lesson was started from the AI skill map: the concept it
+    # teaches and the learner's goal. Both optional; plain lessons leave them null.
+    skill_concept_id: Mapped[Optional[str]] = mapped_column(String(80))
+    skill_goal_id: Mapped[Optional[str]] = mapped_column(String(80))
+    # Live difficulty (1-5) and how it moved: {"streak": n, "log": [{from,to,reason,at}]}.
+    # Null on lessons created before the feature; set on the first graded answer.
+    difficulty: Mapped[Optional[int]] = mapped_column(Integer)
+    difficulty_state: Mapped[Optional[dict]] = mapped_column(JSON)
+    # Practice Lab: fresh questions generated for the weakest concepts.
+    # {"items": [{id, node_id, concept, question_text, type, options, expected_concept, difficulty}], "at": iso}
+    practice_extra: Mapped[Optional[dict]] = mapped_column(JSON)
 
     level: Mapped[str] = mapped_column(String(20), default="beginner", nullable=False)
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
