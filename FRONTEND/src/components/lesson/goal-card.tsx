@@ -58,4 +58,70 @@ export function GoalCard() {
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-sky-700"><Flag className="h-3.5 w-3.5" />{tx.goal}</p>
             <h2 className="mt-1 line-clamp-2 break-words font-display text-2xl leading-tight text-ink [overflow-wrap:anywhere] @xl:text-3xl">{data.goal_title}</h2>
+          </div>
+          <Link href="/path#skill-map" className="text-sm text-ink-3 hover:text-ink">{tx.change}</Link>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-paper-3">
+          <motion.div className="h-full rounded-full bg-sky-500" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.9, ease: EASE }} />
+        </div>
+        <p className="mt-1.5 text-xs text-ink-3">{tx.of.replace("{d}", n(data.scope_done)).replace("{t}", n(data.scope_total))}</p>
+
+        {next ? (
+          <div className="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border border-sky-200 bg-sky-50/50 p-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-ink-3">{tx.next}</p>
+              <p className="line-clamp-2 break-words text-lg font-semibold leading-snug text-ink [overflow-wrap:anywhere]" title={next.title}>{next.title}</p>
+              <p className="mt-1 line-clamp-3 break-words text-sm text-ink-2 [overflow-wrap:anywhere]" title={next.reason}>{next.reason}</p>
+            </div>
+            <Link href={stepHref(next, data.goal)} className="inline-flex w-full shrink-0 items-center justify-center gap-2 @md:w-auto rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-700">
+              {next.state === "practice" || next.state === "recap" ? <RotateCcw className="h-4 w-4" /> : null}{tx.cont}<ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sage-100 p-4">
+            <p className="flex items-center gap-2 font-semibold text-ink"><Trophy className="h-5 w-5 text-marigold-600" />{tx.reached}</p>
+            <Link href="/path#skill-map" className="text-sm font-medium text-sky-700 hover:underline">{tx.pick}</Link>
+          </div>
+        )}
+      </motion.section>
+    );
+  }
+
+  /* exploring freely: stay out of the way */
+  if (explore) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 text-sm text-ink-3">
+        <Compass className="h-4 w-4" />{tx.exploring}
+        <button onClick={() => { writeExplore(false); setExplore(false); }} className="font-medium text-sky-700 hover:underline">{tx.setGoal}</button>
+      </div>
+    );
+  }
+
+  /* no goal yet: three ways to learn */
+  const options = [
+    { icon: <GraduationCap className="h-5 w-5" />, title: tx.zero, sub: tx.zeroSub, onClick: () => void setGoal(COURSE_GOAL) },
+    { icon: <Target className="h-5 w-5" />, title: tx.topic, sub: tx.topicSub, href: "/path#skill-map" },
+    { icon: <Compass className="h-5 w-5" />, title: tx.explore, sub: tx.exploreSub, onClick: () => { writeExplore(true); setExplore(true); } },
+  ];
+  return (
+    <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE }} className={card}>
+      <h2 className="font-display text-3xl text-ink">{tx.ask}</h2>
+      <p className="mt-1 text-sm text-ink-3">{tx.askSub}</p>
+      <div className="mt-5 grid gap-3 @xl:grid-cols-3">
+        {options.map((o, i) => {
+          const inner = (
+            <>
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-50 text-sky-600">{saving && i === 0 ? <Loader2 className="h-5 w-5 animate-spin" /> : o.icon}</span>
+              <p className="mt-3 font-semibold text-ink">{o.title}</p>
+              <p className="mt-1 text-sm text-ink-2">{o.sub}</p>
+            </>
+          );
+          const cls = "block rounded-2xl border border-line p-4 text-left transition-colors hover:border-sky-300 hover:bg-sky-50/40";
+          return o.href
+            ? <Link key={o.title} href={o.href} className={cls}>{inner}</Link>
+            : <button key={o.title} onClick={o.onClick} disabled={saving} className={cls}>{inner}</button>;
+        })}
+      </div>
+    </motion.section>
+  );
 }
