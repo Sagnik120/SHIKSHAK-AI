@@ -68,4 +68,63 @@ export function PlacementCheck({ map }: { map: SkillMap }) {
       <div className={shell}>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">{tx.q.replace("{a}", n(q.number)).replace("{b}", n(q.of))}</p>
+          <div className="flex gap-1">{Array.from({ length: q.of }, (_, i) => <span key={i} className={cn("h-1.5 w-5 rounded-full", i < q.number - 1 ? "bg-sky-500" : i === q.number - 1 ? "bg-sky-300" : "bg-line")} />)}</div>
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={q.id} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25, ease: EASE }}>
+            <p className="mt-3 text-lg font-semibold text-ink">{q.question}</p>
+            <div className="mt-4 grid gap-2 @lg:grid-cols-2">
+              {q.options.map((o, i) => (
+                <button key={o} disabled={busy} onClick={() => void advance([...answers, { id: q.id, choice: i }])}
+                  className="rounded-2xl border border-line bg-surface px-4 py-3 text-left text-sm text-ink transition-colors hover:border-sky-400 hover:bg-sky-50 disabled:opacity-60">
+                  {o}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  if (phase.kind === "saving") {
+    return <div className={cn(shell, "flex items-center gap-3 text-sm text-ink-2")}><Loader2 className="h-4 w-4 animate-spin" />{tx.finishing}</div>;
+  }
+
+  if (phase.kind === "result") {
+    const c = titleOf(phase.upto);
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className={shell}>
+        <p className="flex items-center gap-2 font-display text-2xl text-ink"><Check className="h-5 w-5 text-sage" />{c ? tx.result.replace("{c}", c) : tx.resultNone}</p>
+        {c && <p className="mt-1 text-sm text-ink-2">{tx.resultSub}</p>}
+        <button onClick={() => setPhase({ kind: "idle" })} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">{tx.done}<ArrowRight className="h-4 w-4" /></button>
+      </motion.div>
+    );
+  }
+
+  /* idle: already placed -> one quiet line; otherwise offer it once a goal is set */
+  if (map.placement) {
+    const c = titleOf(map.placement.known_upto);
+    return (
+      <p className="flex flex-wrap items-center gap-2 text-sm text-ink-3">
+        <ClipboardCheck className="h-4 w-4" />{c ? tx.placed.replace("{c}", c) : tx.placedNone}
+        <button onClick={start} disabled={busy} className="font-medium text-sky-700 hover:underline">{tx.retake}</button>·
+        <button onClick={() => void reset()} disabled={busy} className="inline-flex items-center gap-1 text-ink-3 hover:text-ink"><RotateCcw className="h-3 w-3" />{tx.reset}</button>
+      </p>
+    );
+  }
+  if (!map.goal || hidden) return null;
+  return (
+    <div className={cn(shell, "flex flex-wrap items-center gap-4")}>
+      <span className="grid h-11 w-11 place-items-center rounded-xl bg-surface text-sky-600"><ClipboardCheck className="h-5 w-5" /></span>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-ink">{tx.offer}</p>
+        <p className="text-sm text-ink-2">{tx.offerSub}</p>
+      </div>
+      <button onClick={() => setHidden(true)} className="text-sm text-ink-3 hover:text-ink">{tx.later}</button>
+      <button onClick={start} disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{tx.start}
+      </button>
+    </div>
+  );
 }
