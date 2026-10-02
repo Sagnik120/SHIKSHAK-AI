@@ -94,7 +94,7 @@ class TeacherOrchestrator:
                 positions.append(best)
         return sorted(positions)
 
-    def generate_checkpoints(self, session_id: str, node: Any, segment: Any, positions: list) -> list:
+    def generate_checkpoints(self, session_id: str, node: Any, segment: Any, positions: list, difficulty: Optional[int] = None) -> list:
         """One question per checkpoint, each about only the script up to it."""
         from concurrent.futures import ThreadPoolExecutor
 
@@ -104,7 +104,7 @@ class TeacherOrchestrator:
             # Only what has been said so far: the full video's key points
             # would let a question ask about material not reached yet.
             covered = segment.model_copy(update={"script_text": " ".join(words[:position]), "notes": None})
-            event = self.questioner.generate_question(node, covered)
+            event = self.questioner.generate_question(node, covered, difficulty=difficulty)
             tracer.emit(
                 QUESTION_GENERATED,
                 session_id,
