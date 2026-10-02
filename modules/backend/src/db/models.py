@@ -53,6 +53,13 @@ class User(Base, TimestampMixin):
     # Learner preferences (drive lesson defaults)
     preferred_language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     preferred_level: Mapped[str] = mapped_column(String(20), default="beginner", nullable=False)
+    # Learning goal on the AI skill map: a concept id, "__all__" or "__track_<id>".
+    skill_goal_id: Mapped[Optional[str]] = mapped_column(String(80))
+    # Placement check result: {"known": [concept ids], "difficulty": 1-5, "at": iso}.
+    placement_json: Mapped[Optional[dict]] = mapped_column(JSON)
+    # Spaced review: {concept_id: {"interval": days, "last": iso, "due": iso, "lapsed": iso|None,
+    #                 "pending": [question dicts] | None, "answers": {qid: bool}}}
+    review_json: Mapped[Optional[dict]] = mapped_column(JSON)
     preferred_style: Mapped[Optional[str]] = mapped_column(String(40), default="visual")
     default_time_budget_min: Mapped[int] = mapped_column(Integer, default=15, nullable=False)
 
