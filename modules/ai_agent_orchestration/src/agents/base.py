@@ -3,6 +3,7 @@ import logging
 from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError
 from modules.ai_agent_orchestration.src.adapters.llm_adapter import LLMAdapter
+from functools import lru_cache
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,12 @@ class BaseAgent:
     def load_prompt(self, filename: str) -> str:
         """Load a system prompt template from the prompts directory."""
         return _read_prompt(str(self.prompts_dir / filename))
+
+    @staticmethod
+    def to_prompt_json(data) -> str:
+        """Compact JSON for prompts: no indentation, and raw UTF-8 so Hindi text isn't
+        inflated into \\uXXXX escapes (both cut input tokens substantially)."""
+        return json.dumps(data, ensure_ascii=False, separators=(",", ":"), default=str)
 
     def call_llm_json(
         self,
@@ -58,7 +65,7 @@ class BaseAgent:
                     messages.append({"role": "assistant", "content": response_text})
                     messages.append({
                         "role": "user",
-                        "content": f"Your previous response failed validation. Error: {str(e)}. Please provide a valid JSON matching the exact schema requested, with no extra text or markdown wrappers."
+                        "content": f"Your previous response failed validation. Error: {str(e)[:500]}. Please provide a valid JSON matching the exact schema requested, with no extra text or markdown wrappers."
                     })
                     
         raise ValueError(f"Failed to get valid JSON from LLM after {max_retries} retries. Last error: {last_error}")
