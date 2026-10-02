@@ -687,6 +687,8 @@ class LiveSession:
         change = self._update_difficulty(evaluation)
         self.commit()
         await self.send("evaluation_result", {**_as_dict(evaluation), "interaction_id": interaction.id})
+        if change:
+            await self.send("difficulty_changed", change)
         return await self._adapt(interaction, evaluation)
 
     async def _await_answer(self, interaction_id: str) -> tuple[str, float]:
