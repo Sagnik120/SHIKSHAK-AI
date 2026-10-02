@@ -17,9 +17,9 @@ class AssessmentAgent(BaseAgent):
         
         user_content = {
             "lesson_id": lesson_id,
-            "session_history": [ev.model_dump() for ev in session_history]
+            "session_history": [ev.model_dump(exclude_none=True) for ev in session_history]
         }
             
-        user_prompt = f"Please generate an assessment report based on the following evaluation history:\n{json.dumps(user_content, indent=2)}"
+        user_prompt = f"Please generate an assessment report based on the following evaluation history:\n{self.to_prompt_json(user_content)}"
         
         return self.call_llm_json(system_prompt, user_prompt, AssessmentReport, max_retries=2)
