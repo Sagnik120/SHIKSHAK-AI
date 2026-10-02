@@ -73,17 +73,15 @@ export function LessonDemo() {
       {/* the "video" board */}
       <div className="relative aspect-[16/10] overflow-hidden bg-[#2a3a5c]">
         <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "radial-gradient(#fff 1px, transparent 1px)", backgroundSize: "14px 14px" }} />
-        {/* the diagram: a bus and a passenger leaning */}
+        {/* the diagram: training points, a good fit, and an overfit curve */}
         <svg viewBox="0 0 320 200" className="absolute inset-x-6 top-5 h-[62%] w-[calc(100%-3rem)]" fill="none" stroke="#f5f1e6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <motion.path d="M20 150 H300" strokeDasharray="6 8" animate={{ strokeDashoffset: paused ? 0 : [-28, 0] }} transition={{ repeat: Infinity, duration: 0.6, ease: "linear" }} />
-          <rect x="70" y="70" width="170" height="70" rx="12" />
-          <circle cx="105" cy="146" r="10" /><circle cx="205" cy="146" r="10" />
-          <rect x="92" y="84" width="34" height="22" rx="3" opacity="0.6" /><rect x="138" y="84" width="34" height="22" rx="3" opacity="0.6" /><rect x="184" y="84" width="34" height="22" rx="3" opacity="0.6" />
-          <motion.g style={{ originX: "155px", originY: "132px" }} animate={{ rotate: progress > 30 ? 16 : 0 }} transition={{ type: "spring", stiffness: 120, damping: 8 }}>
-            <circle cx="155" cy="96" r="7" fill="#f0c35a" stroke="none" />
-            <path d="M155 103 V128 M155 110 L166 116" stroke="#f0c35a" />
-          </motion.g>
-          <motion.path d="M250 105 h34 m-8 -7 l8 7 l-8 7" stroke="#e5917f" initial={{ pathLength: 0 }} animate={{ pathLength: progress > 30 ? 1 : 0 }} />
+          <path d="M40 20 V160 H300" opacity="0.6" />
+          {[[60,140],[85,118],[110,128],[135,96],[160,104],[185,74],[210,86],[235,56],[260,66],[285,40]].map(([x, y]) => (
+            <circle key={x} cx={x} cy={y} r="4" fill="#f0c35a" stroke="none" />
+          ))}
+          <motion.path d="M55 142 L290 42" strokeDasharray="6 6" opacity="0.8" animate={{ strokeDashoffset: paused ? 0 : [-24, 0] }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
+          <motion.path d="M60 140 C72 100 78 112 85 118 S102 150 110 128 S128 80 135 96 S154 122 160 104 S178 52 185 74 S204 108 210 86 S228 34 235 56 S254 88 260 66 S278 20 285 40"
+            stroke="#e5917f" initial={{ pathLength: 0 }} animate={{ pathLength: progress > 30 ? 1 : 0 }} transition={{ duration: 1.2 }} />
         </svg>
         {/* caption */}
         <AnimatePresence mode="wait">
