@@ -53,3 +53,49 @@ def build(db: Session, lesson: Lesson) -> list[dict]:
             add(e.occurred_at, "memory", weak=(p.get("weak_concepts") or [])[:3],
                 misconceptions=(p.get("recurring_misconceptions") or [])[:3])
         elif t == "agent.plan_generated":
+            add(e.occurred_at, "plan", parts=p.get("node_count"), from_document=bool(p.get("grounded_in_document")),
+                used_memory=bool(p.get("used_learner_memory")))
+            _add_path(add, db, lesson, e.occurred_at)
+        elif t == "agent.retrieval_resolved":
+            if p.get("has_sufficient_context") is False:
+                add(e.occurred_at, "no_context", e.node_id)
+            elif p.get("was_refined"):
+                add(e.occurred_at, "refined_search", e.node_id)
+        elif t == "agent.answer_evaluated":
+            last_eval[e.node_id] = p
+        elif t == "agent.adaptation_decided":
+            action = (p.get("action") or "").upper()
+            if action in ("MODIFY", "REGENERATE", "HUMAN"):
+                ev = last_eval.get(e.node_id) or {}
+                add(e.occurred_at, f"adapt_{action.lower()}", e.node_id,
+                    attempt=p.get("attempts_on_node"), misconception=ev.get("misconception_tag"))
+        elif t in ("escalation_continued", "escalation_skipped"):
+            add(e.occurred_at, t, e.node_id)
+
+    for change in (lesson.difficulty_state or {}).get("log") or []:
+        add(change.get("at"), "level", frm=change.get("from"), to=change.get("to"),
+            reason=_LEVEL_REASON.get(change.get("reason"), "other"))
+
+    for esc in db.scalars(select(Escalation).where(Escalation.lesson_id == lesson.id)).all():
+        add(esc.opened_at, "mentor", esc.node_id)
+
+    # Timestamps mix naive-UTC rows and aware ISO strings; compare as UTC datetimes.
+    out.sort(key=lambda x: _when(x["at"]))
+    return out
+
+
+def _add_path(add, db: Session, lesson: Lesson, at) -> None:
+    """Why this lesson looks the way it does on the learner's route."""
+    if not lesson.skill_concept_id:
+        return
+    try:
+        from modules.backend.src.services import skill_map
+
+        ctx = skill_map.path_context(db, lesson.user_id, lesson.skill_concept_id, lesson.skill_goal_id)
+    except Exception:
+        return
+    if not ctx:
+        return
+    add(at, "path", goal=ctx["goal"], skipped=ctx["mastered_prerequisites"][:4],
+        recap=[w["concept"] for w in ctx["weak_prerequisites"]][:3] + ctx["not_yet_learned"][:3],
+        retry_percent=ctx.get("previous_attempt_percent"), next=ctx.get("next_on_path"))
