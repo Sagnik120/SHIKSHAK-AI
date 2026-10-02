@@ -9,6 +9,38 @@ from typing import Any, Dict, Protocol, Tuple, Union
 from PIL import Image, ImageDraw, ImageFont
 from modules.avatar_voice.src.models import VisualRenderResult
 
+# Bundled Noto Sans + Noto Sans Devanagari merged into one face, so Hindi and
+# mixed Hindi/English board text renders as glyphs instead of tofu boxes.
+FONT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "fonts")
+FONT_REGULAR = os.path.abspath(os.path.join(FONT_DIR, "ShikshakSans-Regular.ttf"))
+FONT_BOLD = os.path.abspath(os.path.join(FONT_DIR, "ShikshakSans-Bold.ttf"))
+_MPL_READY = False
+
+try:
+    from PIL import features as _features
+    _HAS_RAQM = bool(_features.check("raqm"))
+except Exception:
+    _HAS_RAQM = False
+
+
+def use_board_font_in_matplotlib() -> None:
+    """Register the bundled face with matplotlib (once) and make it the default."""
+    global _MPL_READY
+    if _MPL_READY:
+        return
+    try:
+        import matplotlib
+        from matplotlib import font_manager
+        for path in (FONT_REGULAR, FONT_BOLD):
+            if os.path.exists(path):
+                font_manager.fontManager.addfont(path)
+        name = font_manager.FontProperties(fname=FONT_REGULAR).get_name()
+        matplotlib.rcParams["font.family"] = [name, "DejaVu Sans"]
+        # Mathtext keeps its own fonts; plain text uses the bundled face.
+        _MPL_READY = True
+    except Exception:
+        pass
+
 THEME = {
     "bg": (15, 23, 42, 255),
     "card_bg": (30, 41, 59, 255),
@@ -41,24 +73,40 @@ class BaseRenderer:
         self.height = 1080
 
     def create_canvas(self, title: str = "", subtitle: str = "") -> Tuple[Image.Image, ImageDraw.Draw]:
-        """Create a stylized 1344x1080 slide canvas with header banner."""
-        img = Image.new("RGBA", (self.width, self.height), THEME["bg"])
-        draw = ImageDraw.Draw(img)
+        """Create a 1344x1080 board: soft gradient, faint grid, bold title, raised content panel."""
+        from PIL import ImageFilter
 
-        # The header used to be a 90px strip of 28px text, illegible at video
-        # scale. Title >=44px, subtitle only when it says something.
-        header_bottom = 160 if subtitle else 130
-        draw.rectangle([40, 30, self.width - 40, header_bottom], fill=THEME["card_bg"], outline=THEME["card_border"], width=2)
-        draw.rounded_rectangle([45, 35, 59, header_bottom - 5], radius=6, fill=THEME["accent_cyan"])
+        w, h = self.width, self.height
+        # Vertical gradient from the theme background to a slightly lifted navy.
+        top, bot = THEME["bg"], (22, 32, 58, 255)
+        grad = Image.linear_gradient("L").resize((w, h))
+        img = Image.composite(Image.new("RGBA", (w, h), bot), Image.new("RGBA", (w, h), top), grad)
+        img = img.convert("RGB")
+        draw = ImageDraw.Draw(img, "RGBA")
+        for gx in range(40, w, 48):
+            for gy in range(40, h, 48):
+                draw.point((gx, gy), fill=(148, 163, 184, 40))
 
-        font_title = self._get_font(46, bold=True)
-        draw.text((80, 52), title or "Concept Explanation", fill=THEME["text_main"], font=font_title)
-
+        header_bottom = 168 if subtitle else 140
+        font_title = self._get_font(50, bold=True)
+        img = img.convert("RGBA")
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.text((64, 48), title or "Concept Explanation", fill=THEME["text_main"], font=font_title)
+        bar_y = header_bottom - (8 if subtitle else 22)
+        draw.rounded_rectangle([64, bar_y, 184, bar_y + 8], radius=4, fill=THEME["accent_cyan"])
+        draw.rounded_rectangle([192, bar_y, 232, bar_y + 8], radius=4, fill=THEME["accent_amber"])
         if subtitle:
-            font_sub = self._get_font(28)
-            draw.text((80, 112), subtitle, fill=THEME["text_muted"], font=font_sub)
+            draw.text((64, 108), subtitle, fill=THEME["text_muted"], font=self._get_font(28))
 
-        draw.rectangle([40, header_bottom + 20, self.width - 40, self.height - 40], fill=THEME["card_bg"], outline=THEME["card_border"], width=2)
+        panel = [40, header_bottom + 14, w - 40, h - 40]
+        shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).rounded_rectangle([panel[0] + 6, panel[1] + 14, panel[2] + 6, panel[3] + 14], radius=28, fill=(0, 0, 0, 120))
+        img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(18)))
+        # RGB + an "RGBA" draw blends translucent fills; on RGBA Pillow overwrites.
+        img = img.convert("RGB")
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.rounded_rectangle(panel, radius=28, fill=(30, 41, 59, 235), outline=(71, 85, 105, 255), width=2)
+        draw.line([(panel[0] + 28, panel[1] + 1), (panel[2] - 28, panel[1] + 1)], fill=(148, 163, 184, 70), width=2)
 
         return img, draw
 
@@ -66,6 +114,7 @@ class BaseRenderer:
         """Retrieve appropriate font with cross-platform fallback."""
         try:
             font_names = [
+                FONT_BOLD if bold else FONT_REGULAR,
                 "Helvetica", "Arial", "DejaVuSans", "NotoSans-Regular",
                 "/System/Library/Fonts/Helvetica.ttc",
                 "/Library/Fonts/Arial.ttf",
@@ -73,7 +122,9 @@ class BaseRenderer:
             ]
             for fn in font_names:
                 try:
-                    return ImageFont.truetype(fn, size)
+                    # Raqm (when libraqm/fribidi are installed) shapes Devanagari
+                    # conjuncts and matras; basic layout still draws the glyphs.
+                    return ImageFont.truetype(fn, size, layout_engine=ImageFont.Layout.RAQM if _HAS_RAQM else ImageFont.Layout.BASIC)
                 except Exception:
                     continue
             return ImageFont.load_default()
