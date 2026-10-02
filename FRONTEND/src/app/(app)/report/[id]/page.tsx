@@ -53,9 +53,6 @@ function Report({ l }: { l: LessonDetail }) {
   const [busy, setBusy] = useState(false);
 
   const download = async () => {
-  const [busy, setBusy] = useState(false);
-
-  const download = async () => {
     setBusy(true);
     try {
       const blob = await api.notesMarkdown(l.id);
@@ -76,6 +73,11 @@ function Report({ l }: { l: LessonDetail }) {
 
   return (
     <div className="space-y-8">
+      <PathNextCard lessonId={l.id} />
+      <section className="rounded-3xl border border-line bg-surface p-5">
+        <h2 className="flex items-center gap-2 font-display text-2xl text-ink"><Lightbulb className="h-5 w-5 text-marigold-600" />{t("report.why")}</h2>
+        <WhyLog lessonId={l.id} className="mt-4" />
+      </section>
       {/* certificate-like hero */}
       <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }}
         className="ruled relative overflow-hidden rounded-[32px] border border-line bg-surface py-10 pl-20 pr-8 shadow-[var(--shadow-lift)] sm:pl-24">
