@@ -113,3 +113,36 @@ def placement_save(body: PlacementBody, user: User = Depends(get_current_user), 
 def placement_reset(user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
     user.placement_json = None
     db.commit()
+    return skill_map.snapshot(db, user.id, user.skill_goal_id)
+
+
+# ── spaced review ────────────────────────────────────────────────────────
+class ReviewAnswer(BaseModel):
+    question_id: str = Field(max_length=40)
+    answer: str = Field(max_length=4000)
+
+
+@router.get("/spaced-review")
+def review_due(user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
+    """Mastered concepts that are due for a refresh, most overdue first."""
+    from modules.backend.src.services import review_service
+    return {"due": review_service.due(db, user)}
+
+
+@router.post("/spaced-review/{concept_id}/start")
+def review_start(concept_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db, scope="function")):
+    from modules.backend.src.services import review_service
+    try:
+        return review_service.start(db, user, concept_id)
+    except review_service.ReviewError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+
+
+@router.post("/spaced-review/{concept_id}/answer")
+def review_answer(concept_id: str, body: ReviewAnswer, user: User = Depends(get_current_user),
+                  db: Session = Depends(get_db, scope="function")):
+    from modules.backend.src.services import review_service
+    try:
+        return review_service.answer(db, user, concept_id, body.question_id, body.answer)
+    except review_service.ReviewError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
