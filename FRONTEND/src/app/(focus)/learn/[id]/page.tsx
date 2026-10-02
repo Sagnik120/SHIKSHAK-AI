@@ -10,6 +10,7 @@ import { useClassroom } from "@/features/classroom/use-classroom";
 import type { ClassroomState, Connection, NodeView } from "@/features/classroom/controller";
 import { ConceptRail, RewatchDialog, StageOverlay, StudyPanel } from "@/features/classroom/panels";
 import { QuestionCard } from "@/features/classroom/question-card";
+import { PathChip } from "@/components/lesson/path-progress";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { PlaneMark } from "@/components/brand/logo";
 import { useI18n } from "@/providers/i18n";
@@ -53,6 +54,10 @@ export default function ClassroomPage() {
   const conn = CONN[s.connection];
 
   return (
+    <div className="flex min-h-dvh flex-col bg-paper lg:h-dvh lg:overflow-hidden">
+      {/* top bar */}
+      <header className="flex items-center gap-3 border-b border-line bg-paper/90 px-4 py-2.5 backdrop-blur lg:px-6">
+        <Link href="/dashboard" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-ink-2 hover:text-ink" aria-label={t("class.leave")}>
     <div className="flex min-h-dvh flex-col bg-paper lg:h-dvh lg:overflow-hidden">
       {/* top bar */}
       <header className="flex items-center gap-3 border-b border-line bg-paper/90 px-4 py-2.5 backdrop-blur lg:px-6">
