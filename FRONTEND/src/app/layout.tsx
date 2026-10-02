@@ -12,9 +12,9 @@ const uiDeva = Noto_Sans_Devanagari({ subsets: ["devanagari"], variable: "--font
 const hand = Kalam({ subsets: ["latin", "devanagari"], weight: ["300", "400", "700"], variable: "--font-kalam" });
 
 export const metadata: Metadata = {
-  title: { default: "Shikshak — the teacher who notices", template: "%s · Shikshak" },
+  title: { default: "Shikshak — your personalised AI tutor for learning AI", template: "%s · Shikshak" },
   description:
-    "An AI teacher that teaches on video, pauses to check you understood, and explains it again — differently — when you didn't. English & हिन्दी.",
+    "A personalised AI tutor for learning AI: adaptive learning paths, video lessons that check you understood, and difficulty, explanations and practice that adjust to your progress. English & हिन्दी.",
   icons: { icon: "/icon.svg" },
 };
 
