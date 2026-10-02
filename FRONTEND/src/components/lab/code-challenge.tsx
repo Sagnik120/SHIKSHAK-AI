@@ -208,4 +208,105 @@ function Editor({ c, hi, solved, onPass, onNext }: { c: Challenge; hi: boolean; 
         <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" /><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
           <span className="ml-3 text-xs text-slate-400">{c.id}.py</span>
+          <span className="ml-auto text-[11px] text-slate-500">{hi ? "हाइलाइट वाली पंक्तियाँ लिखें" : "Write the highlighted lines"}</span>
+        </div>
+        <div className="overflow-x-auto py-3">
+          {pre.map((l, i) => <CodeLine key={`a${i}`} n={i + 1} text={l} />)}
+          <div className="relative flex border-y border-sky-400/30 bg-sky-400/[0.07]">
+            <div className="w-10 shrink-0 select-none pr-3 text-right text-sky-300/60">
+              {Array.from({ length: rows }, (_, i) => <div key={i}>{pre.length + i + 1}</div>)}
+            </div>
+            <textarea ref={ta} value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={onKey} spellCheck={false} rows={rows}
+              aria-label="Your code" className="min-w-0 flex-1 resize-none whitespace-pre bg-transparent pr-4 text-sky-50 caret-sky-300 outline-none placeholder:text-slate-500" />
+          </div>
+          {post.map((l, i) => <CodeLine key={`b${i}`} n={pre.length + rows + i + 1} text={l} />)}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button onClick={() => void run()} disabled={busy}
+          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+          {phase === "loading" ? (hi ? "Python लोड हो रहा है…" : "Loading Python…") : (hi ? "टेस्ट चलाएँ" : "Run tests")}
+        </button>
+        <button onClick={() => setHint((h) => !h)} className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3 py-2.5 text-sm text-ink-2 hover:text-ink">
+          <Lightbulb className="h-4 w-4" />{hi ? "संकेत" : "Hint"}
+        </button>
+        <button onClick={() => { setCode(c.blank); setPhase("idle"); setResults(c.tests.map(() => ({ state: "wait" }))); ta.current?.focus(); }}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3 py-2.5 text-sm text-ink-2 hover:text-ink">
+          <RotateCcw className="h-4 w-4" />{hi ? "रीसेट" : "Reset"}
+        </button>
+        <span className="ml-auto hidden text-xs text-ink-3 sm:inline">⌘/Ctrl + Enter</span>
+      </div>
+
+      <AnimatePresence>
+        {hint && (
+          <motion.pre initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden rounded-xl border border-amber/30 bg-amber-100/60 px-4 py-3 font-mono text-[13px] text-ink">{c.hint}</motion.pre>
+        )}
+      </AnimatePresence>
+      {err && <p className="rounded-xl bg-rose/10 px-4 py-3 text-sm text-rose">{err}</p>}
+
+      {/* test cases */}
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-ink">{hi ? "टेस्ट केस" : "Test cases"} <span className="ml-1 text-xs font-normal text-ink-3">{c.tests.filter((t) => !t.hidden).length} {hi ? "दिखे" : "visible"} · {c.tests.filter((t) => t.hidden).length} {hi ? "छिपे" : "hidden"}</span></p>
+          <p className="font-mono text-xs text-ink-3">{passed}/{c.tests.length}</p>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-paper-3">
+          <motion.div className={cn("h-full rounded-full", phase === "fail" ? "bg-marigold-600" : "bg-sage")} animate={{ width: `${(passed / c.tests.length) * 100}%` }} transition={{ ease: EASE }} />
+        </div>
+        <ul className="mt-3 space-y-1.5">
+          {c.tests.map((t, i) => {
+            const r = results[i];
+            return (
+              <motion.li key={i} layout animate={r.state === "fail" ? { x: [0, -5, 5, -3, 3, 0] } : { x: 0 }} transition={{ duration: 0.35 }}
+                className={cn("flex items-center gap-3 rounded-xl border px-3 py-2 font-mono text-xs transition-colors",
+                  r.state === "pass" ? "border-sage/40 bg-sage-100" : r.state === "fail" ? "border-marigold-200 bg-marigold-50" : r.state === "run" ? "border-sky-300 bg-sky-50" : "border-line bg-paper")}>
+                <span className="grid h-5 w-5 shrink-0 place-items-center">
+                  {r.state === "pass" ? <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}><Check className="h-4 w-4 text-sage" /></motion.span>
+                    : r.state === "fail" ? <X className="h-4 w-4 text-marigold-600" />
+                    : r.state === "run" ? <Loader2 className="h-4 w-4 animate-spin text-sky-600" /> : <Circle className="h-3 w-3 text-ink-3" />}
+                </span>
+                {t.hidden
+                  ? <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-ink-2"><Lock className="h-3 w-3" />{hi ? "छिपा टेस्ट" : "Hidden test"} #{c.tests.slice(0, i + 1).filter((x) => x.hidden).length}</span>
+                  : <span className="min-w-0 flex-1 truncate text-ink">{t.call} <span className="text-ink-3">→ {t.expect}</span></span>}
+                {r.state === "fail" && (t.hidden
+                  ? <span className="shrink-0 text-marigold-600">{hi ? "किनारे के मामले सोचें" : "think about edge cases"}</span>
+                  : r.got && <span className="max-w-[45%] truncate text-marigold-600">{hi ? "मिला" : "got"} {r.got}</span>)}
+              </motion.li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <AnimatePresence>
+        {phase === "pass" && (
+          <motion.div initial={{ opacity: 0, y: 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} transition={{ ease: EASE }}
+            className="relative overflow-hidden rounded-2xl border border-sage/40 bg-sage-100 p-5">
+            {Array.from({ length: 14 }, (_, i) => (
+              <motion.span key={i} className="absolute h-2 w-2 rounded-full" style={{ left: `${8 + i * 6.5}%`, top: "60%", background: ["var(--sky-500)", "var(--marigold-600)", "var(--sage)"][i % 3] }}
+                initial={{ y: 0, opacity: 1 }} animate={{ y: -70 - (i % 4) * 18, opacity: 0, rotate: 180 }} transition={{ duration: 1.1, delay: i * 0.03 }} />
+            ))}
+            <p className="flex items-center gap-2 font-display text-2xl text-ink"><Trophy className="h-5 w-5 text-marigold-600" />{hi ? "सभी टेस्ट पास!" : "All tests passed!"}</p>
+            <p className="mt-1 flex gap-2 text-sm text-ink-2"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />{c.why}</p>
+            {onNext ? (
+              <button onClick={onNext} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+                {hi ? "अगली चुनौती" : "Next challenge"}<ArrowRight className="h-4 w-4" />
+              </button>
+            ) : <p className="mt-3 text-sm font-medium text-sage">{hi ? "आपने सभी चुनौतियाँ पूरी कर लीं!" : "You've finished every challenge!"}</p>}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CodeLine({ n, text }: { n: number; text: string }) {
+  return (
+    <div className="flex whitespace-pre text-slate-400">
+      <span className="w-10 shrink-0 select-none pr-3 text-right text-slate-600">{n}</span>
+      <span>{text || " "}</span>
+    </div>
+  );
 }
