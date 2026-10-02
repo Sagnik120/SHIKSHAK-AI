@@ -68,4 +68,81 @@ export function SpacedReview() {
   if (set) return <ReviewRun set={set} onDone={done} />;
   if (q.isLoading) return <Skeleton className="mt-6 h-40 rounded-[24px]" />;
   const due = q.data?.due ?? [];
+  if (!due.length) return <p className="mt-10 text-center text-ink-3">{tx.none}</p>;
+  return (
+    <ul className="mt-6 space-y-2">
+      {due.map((d) => (
+        <li key={d.id} className="flex items-center gap-4 rounded-2xl border border-line bg-surface px-4 py-3">
+          <RotateCcw className="h-4 w-4 shrink-0 text-marigold-600" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-ink">{d.title}</p>
+            <p className="text-xs text-ink-3">{tx.ago.replace("{d}", n(d.days_since))}</p>
+          </div>
+          <button onClick={() => void open(d.id)} disabled={!!opening} className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60">
+            {opening === d.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />}{tx.begin}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ReviewRun({ set, onDone }: { set: ReviewSet; onDone: () => void }) {
+  const tx = useTx();
+  const { n } = useI18n();
+  const [final, setFinal] = useState<ReviewResult | null>(null);
+  return (
+    <div className="mt-6 space-y-4">
+      <h2 className="font-display text-3xl text-ink">{set.title}</h2>
+      {set.questions.map((q, i) => <ReviewQuestion key={q.id} cid={set.id} q={q} i={i} onResult={(r) => r.finished && setFinal(r)} />)}
+      {final && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+          className={cn("flex flex-wrap items-center gap-3 rounded-2xl p-4", final.passed ? "bg-sage-100" : "bg-marigold-100")}>
+          {final.passed ? <Check className="h-5 w-5 text-sage" /> : <RotateCcw className="h-5 w-5 text-marigold-600" />}
+          <p className="min-w-0 flex-1 text-sm text-ink">{(final.passed ? tx.passed : tx.failed).replace("{d}", n(final.next_in_days ?? 0))}</p>
+          <button onClick={onDone} className="text-sm font-medium text-sky-700 hover:underline">{tx.next}</button>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function ReviewQuestion({ cid, q, i, onResult }: { cid: string; q: ReviewSet["questions"][number]; i: number; onResult: (r: ReviewResult) => void }) {
+  const tx = useTx();
+  const { n } = useI18n();
+  const [ans, setAns] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<ReviewResult | null>(null);
+  const mcq = q.options.length > 0;
+  const submit = async (value: string) => {
+    if (!value.trim()) return;
+    setBusy(true);
+    try { const r = await api.reviewAnswer(cid, q.id, value); setRes(r); onResult(r); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-5">
+      <p className="text-lg font-medium text-ink"><span className="mr-2 font-display text-sky-600">{n(i + 1)}</span>{q.question_text}</p>
+      {mcq ? (
+        <div className="mt-3 grid gap-2">
+          {q.options.map((o) => (
+            <button key={o} disabled={!!res || busy} onClick={() => { setAns(o); void submit(o); }}
+              className={cn("rounded-xl border px-4 py-2.5 text-left text-sm", ans === o ? "border-sky-500 bg-sky-50" : "border-line hover:border-sky-300")}>{o}</button>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-3 space-y-2">
+          <Textarea value={ans} onChange={(e) => setAns(e.target.value)} disabled={!!res} rows={3} />
+          {!res && <button onClick={() => void submit(ans)} disabled={busy || !ans.trim()} className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}{tx.check}</button>}
+        </div>
+      )}
+      {res && (
+        <div className={cn("mt-3 flex gap-2 rounded-xl p-3 text-sm", res.correct ? "bg-sage-100" : "bg-marigold-100")}>
+          {res.correct ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-sage" /> : <X className="mt-0.5 h-4 w-4 shrink-0 text-marigold-600" />}
+          <p className="text-ink">{res.feedback_text}{!res.correct && <> <span className="text-ink-3">{tx.model}</span> {res.model_answer}</>}</p>
+        </div>
+      )}
+    </div>
+  );
 }
