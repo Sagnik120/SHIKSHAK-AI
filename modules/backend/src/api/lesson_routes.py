@@ -249,7 +249,12 @@ def create_lesson(
         time_budget_min=payload.time_budget_min,
         style=payload.style,
         status="created",
+        # Unknown ids are dropped rather than rejected: the lesson still works.
+        **_skill_tags(payload),
     )
+    from modules.backend.src.services import difficulty
+
+    lesson.difficulty = difficulty.starting_level(db, user, payload.level)
     db.add(lesson)
     db.flush()
     lesson_service.log_event(db, lesson, "lesson_created")
@@ -572,6 +577,25 @@ def practice_questions(
     from modules.backend.src.services import practice_service
 
     lesson = _owned_lesson(db, lesson_id, user)
+    return {"lesson_id": lesson.id, "title": lesson.title,
+            "questions": practice_service.practice_set(db, lesson, user.id)}
+
+
+@router.post("/{lesson_id}/practice/generate")
+def generate_practice(
+    lesson_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db, scope="function"),
+):
+    """Practice Lab: fresh questions for this lesson's weakest concepts."""
+    from modules.backend.src.services import practice_service
+
+    lesson = _owned_lesson(db, lesson_id, user)
+    try:
+        practice_service.generate(db, lesson)
+    except practice_service.PracticeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    db.commit()
     return {"lesson_id": lesson.id, "title": lesson.title,
             "questions": practice_service.practice_set(db, lesson, user.id)}
 
