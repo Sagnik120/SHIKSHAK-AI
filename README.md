@@ -117,8 +117,8 @@ There is a critical need for an automated system that bridges this gap: an educa
 
 ## Team Members
 
-- **Sagnik Chandra**
-- **Shrusti Jain**
+- **Sagnik Chandra** ([@Sagnik120](https://github.com/Sagnik120))
+- **Shrusti Jain** ([@svj31](https://github.com/svj31))
 
 ---
 
