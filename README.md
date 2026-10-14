@@ -22,7 +22,7 @@
 
 <br/>
 
-**Problem statement:** *Personalised AI Tutor for Learning AI*
+**A source-grounded AI study companion:** *your course material in, cited tutoring and adaptive assessment out*
 
 [🌐 Live demo](https://shikshak-ai-ten.vercel.app/) · [▶️ Demo video](https://drive.google.com/drive/folders/11AFhXK_2RdYCSiwOgmPDFT3HlN1nrAuV?usp=drive_link) · [⚡ Quick start](#-quick-start-tldr) · [🧭 2-minute walkthrough](#-try-it-in-2-minutes-judge-walkthrough)
 
@@ -35,7 +35,7 @@
 | | Section | What you'll find |
 | :---: | :--- | :--- |
 | ⚡ | [Quick start (TL;DR)](#-quick-start-tldr) | Run the project in 3 commands |
-| 💡 | [Project overview](#-project-overview) | The problem, our solution, and how it maps to the problem statement |
+| 💡 | [Project overview](#-project-overview) | The problem, our solution, and how Shikshak AI covers it |
 | ✨ | [Key features](#-key-features) | Everything the tutor does, grouped by purpose |
 | 🏗️ | [System architecture](#%EF%B8%8F-system-architecture) | How the pieces fit together, with diagrams |
 | 🛠️ | [Technologies used](#%EF%B8%8F-technologies-used) | The full stack, layer by layer |
@@ -72,14 +72,14 @@ git clone https://github.com/Sagnik120/SHIKSHAK-AI.git && cd SHIKSHAK-AI
 
 ## 💡 Project Overview
 
-### 🎯 The problem statement
+### 🎯 The problem
 
-> **Personalised AI Tutor for Learning AI**
-> *Build an adaptive AI tutor that creates personalised learning paths and adjusts difficulty, explanations, and practice based on each learner's progress.*
+> **A source-grounded, personalised study companion**
+> *Turn course textbooks and slide decks into a cited knowledge base, then use it to tutor, assess and adapt to each learner's mastery.*
 
 ### 😟 Why this is hard today
 
-Everyone is learning AI, but most courses teach it the **same way, at the same pace, to everyone**. AI concepts stack on each other (gradients → backprop → attention → transformers), so missing one quietly breaks everything after it. Videos don't notice when you're lost, and chatbots wait for you to know what to ask.
+Students study from textbooks, slides and lectures scattered across places, and general chatbots answer from outside the course, untied to what the student already knows. Most courses also teach the same way **at the same pace, to everyone**. AI concepts stack on each other (gradients → backprop → attention → transformers), so missing one quietly breaks everything after it. Videos don't notice when you're lost, and chatbots wait for you to know what to ask.
 
 ### 🌱 Our solution
 
@@ -98,10 +98,15 @@ flowchart LR
     H --> B
 ```
 
-### ✅ How every part of the problem statement is covered
+### ✅ How Shikshak AI covers the problem
 
-| Problem statement asks for | How Shikshak AI does it | Where to see it |
+| Capability | How Shikshak AI does it | Where to see it |
 | :--- | :--- | :--- |
+| 📚 **Knowledge base from your material** | Upload PDF, DOCX, PPTX, TXT or MD with no preprocessing. Content is chunked, indexed and tagged to topics and concepts. Each chunk keeps its source file and page | **New lesson → Upload Document** |
+| 📌 **Source-grounded answers** | BGE-M3 hybrid retrieval + cross-encoder reranking. Every answer cites its page. Queries the material doesn't cover are declined, not guessed | Classroom chat |
+| 📝 **Adaptive assessment** | Placement check for new learners · concept-tagged practice at difficulty levels 1–5 · server-side rubric grading · misconception detection · per-lesson report of weak concepts | **Practice**, **Report** |
+| 🧠 **Learner model** | Per-concept mastery updated after every graded answer · spaced review schedules concepts before they fade | **Progress**, **Refresh** |
+| 🧪 **Evaluated pipeline** | Eval suites for RAG groundedness, rubric scoring and reranker recall/precision (`tests/eval/`) | `pytest tests/eval -v` |
 | 🗺️ **Personalised learning paths** | AI skill map of 70+ concepts (probability → Mamba) · goal-driven routes that skip mastered prerequisites · auto-inserted recaps · placement check · grows itself when you add a new AI topic | **Learning path** page |
 | 📶 **Adjusts difficulty** | Live 1–5 level: 2 right in a row → step up, a miss → step down · carries into your next lesson | ●●●○○ meter in the classroom |
 | 💬 **Adjusts explanations** | Re-explain → rebuild in simpler steps → hand to a mentor · each lesson is planned around what *you* already know | **Why?** tab in the classroom |
